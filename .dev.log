@@ -1,0 +1,15 @@
+
+> cadence-clean@0.1.0 dev
+> next dev
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.1.113:3001
+- Environments: .env.local
+
+✓ Starting...
+✓ Ready in 423ms
+ HEAD /new-decision 200 in 706ms (compile: 556ms, render: 150ms)
+ HEAD /new-decision 200 in 224ms (compile: 82ms, render: 142ms)
+✓ Compiled in 43ms
+ HEAD /new-decision 200 in 249ms (compile: 101ms, render: 148ms)
