@@ -50,9 +50,6 @@ export default function Summary({ data, onBack }: SummaryProps) {
 
   async function generateContentAsync() {
     if (!rulesResult || !user) return;
-    // #region agent log
-    fetch("http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "Summary.tsx:generateContentAsync:before", message: "Calling generateContent", data: { recommendation: rulesResult?.recommendation, hasInputs: !!data, hasRulesResult: !!rulesResult, inputKeys: data ? Object.keys(data) : [] }, timestamp: Date.now(), sessionId: "debug-session", hypothesisId: "H2" }) }).catch(() => {});
-    // #endregion
     setGenerating(true);
     try {
       const result = await generateContent(data, rulesResult);
@@ -62,10 +59,6 @@ export default function Summary({ data, onBack }: SummaryProps) {
         asyncMessage: result.output.asyncMessage || "",
       });
     } catch (error) {
-      // #region agent log
-      const err = error instanceof Error ? error : new Error(String(error));
-      fetch("http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "Summary.tsx:generateContentAsync:catch", message: "generateContent failed", data: { errorMessage: err.message, errorName: err.name }, timestamp: Date.now(), sessionId: "debug-session", hypothesisId: "H1-H5" }) }).catch(() => {});
-      // #endregion
       console.error("Failed to generate content:", error);
       // Continue without generated content
     } finally {

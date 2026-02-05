@@ -93,11 +93,6 @@ async function apiRequest<T>(
     const msg = error.error || `API request failed: ${response.statusText}`;
     const fullMsg = backendMsg ? `${msg} (backend: ${backendMsg})` : msg;
     const indexUrl = backendMsg;
-    // Log full response for debugging (runtime evidence)
-    console.error("[api] generate failed", { endpoint, status: response.status, errorBody: error, backendMessage: backendMsg });
-    // #region agent log
-    fetch("http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "api.ts:!response.ok", message: "API error response", data: { endpoint, status: response.status, errorMsg: fullMsg, errorBody: error, hasMessage: !!backendMsg }, timestamp: Date.now(), sessionId: "debug-session", hypothesisId: "H1-H5" }) }).catch(() => {});
-    // #endregion
     const err = new Error(fullMsg) as Error & { indexUrl?: string };
     if (indexUrl && indexUrl.includes("firebase.google.com") && indexUrl.includes("indexes")) err.indexUrl = indexUrl;
     throw err;
