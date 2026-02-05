@@ -11,7 +11,7 @@ interface CommunicationBreakdownChartProps {
 
 export default function CommunicationBreakdownChart({
   communicationBreakdown,
-  title = "Communication Method Breakdown",
+  title = "How You're Communicating",
   subtitle,
 }: CommunicationBreakdownChartProps) {
   const total = Object.values(communicationBreakdown).reduce((a, b) => a + b, 0);
@@ -34,7 +34,7 @@ export default function CommunicationBreakdownChart({
       {total === 0 ? (
         <div className="text-center py-8">
           <div className="text-5xl mb-3">💬</div>
-          <p className="text-foreground-muted mb-2">No communication data yet.</p>
+          <p className="text-foreground-muted mb-2">No Communication Data Yet.</p>
           <p className="text-sm text-foreground-muted">Your communication method breakdown will appear here once you start making decisions.</p>
         </div>
       ) : (

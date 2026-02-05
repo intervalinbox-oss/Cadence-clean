@@ -18,7 +18,7 @@ export default function TimeSavedChart({ timeSavedByDay }: TimeSavedChartProps) 
         {days.length === 0 ? (
           <div className="text-center py-8">
             <div className="text-5xl mb-3">⏱️</div>
-            <p className="text-foreground-muted mb-2">No time saved data yet.</p>
+            <p className="text-foreground-muted mb-2">No Time Saved Data Yet.</p>
             <p className="text-sm text-foreground-muted">Start making decisions to see how much time you're saving.</p>
           </div>
         ) : (

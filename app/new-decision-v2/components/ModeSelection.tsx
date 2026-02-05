@@ -16,7 +16,7 @@ export default function ModeSelection({ onSelectMode }: ModeSelectionProps) {
           Find your Cadence
         </h1>
         <p className="text-lg text-foreground-muted max-w-2xl mx-auto">
-          Answer a few questions and we&apos;ll recommend whether to schedule a meeting, send an email, or use async communication — then we&apos;ll compose the email or craft the meeting agenda for you.
+          Answer a few questions and we&apos;ll recommend whether to schedule a meeting, send an email, or work via async communication. We&apos;ll compose the email or craft the meeting agenda for you.
         </p>
       </div>
 

@@ -180,13 +180,13 @@ export default function LoginClient() {
             </div>
 
             {resetEmailSent && (
-              <div className="p-3 bg-secondary-50 border border-secondary-200 rounded-lg text-sm text-secondary-800">
+              <div className="p-3 bg-success/10 border border-success/20 rounded-lg text-sm text-foreground" role="status">
                 Password reset email sent! Check your inbox and follow the instructions.
               </div>
             )}
 
             {validation && !resetEmailSent && (
-              <p className="text-sm text-orange-600" role="alert">
+              <p className="text-sm text-warning" role="alert">
                 {validation}
               </p>
             )}

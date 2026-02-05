@@ -24,14 +24,15 @@ function validateApiUrl(): void {
 }
 
 /**
- * Get the current user's auth token for API requests
+ * Get the current user's auth token for API requests.
+ * Uses forceRefresh: true so the backend always gets a valid token.
  */
 async function getAuthToken(): Promise<string | null> {
   const user = auth.currentUser;
   if (!user) return null;
-  
+
   try {
-    return await user.getIdToken();
+    return await user.getIdToken(true);
   } catch (error) {
     console.error("Error getting auth token:", error);
     return null;
@@ -58,20 +59,48 @@ async function apiRequest<T>(
     throw new Error("Not authenticated");
   }
 
-  const url = `${API_BASE_URL}${endpoint}`;
-  
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      ...options.headers,
-    },
-  });
+  // From the browser, use same-origin proxy to avoid CORS with Firebase Functions
+  const baseUrl =
+    typeof window !== "undefined" ? "/api/proxy" : API_BASE_URL;
+  const path = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const url = `${baseUrl}${path}`;
+
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string>),
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+    "X-Firebase-ID-Token": token,
+  };
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+    });
+  } catch (networkError) {
+    const message =
+      networkError instanceof Error ? networkError.message : String(networkError);
+    throw new Error(
+      "Could not reach the API. Make sure Firebase Functions are deployed (firebase deploy --only functions) and NEXT_PUBLIC_FIREBASE_FUNCTIONS_URL in .env.local is correct. " +
+        (message ? `(${message})` : "")
+    );
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: response.statusText }));
-    throw new Error(error.error || `API request failed: ${response.statusText}`);
+    const backendMsg = typeof (error as { message?: string }).message === "string" ? (error as { message: string }).message : "";
+    const msg = error.error || `API request failed: ${response.statusText}`;
+    const fullMsg = backendMsg ? `${msg} (backend: ${backendMsg})` : msg;
+    const indexUrl = backendMsg;
+    // Log full response for debugging (runtime evidence)
+    console.error("[api] generate failed", { endpoint, status: response.status, errorBody: error, backendMessage: backendMsg });
+    // #region agent log
+    fetch("http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "api.ts:!response.ok", message: "API error response", data: { endpoint, status: response.status, errorMsg: fullMsg, errorBody: error, hasMessage: !!backendMsg }, timestamp: Date.now(), sessionId: "debug-session", hypothesisId: "H1-H5" }) }).catch(() => {});
+    // #endregion
+    const err = new Error(fullMsg) as Error & { indexUrl?: string };
+    if (indexUrl && indexUrl.includes("firebase.google.com") && indexUrl.includes("indexes")) err.indexUrl = indexUrl;
+    throw err;
   }
 
   const result = await response.json();

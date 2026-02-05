@@ -21,8 +21,11 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   // Show loading screen while Firebase determines auth state
   if (loading) {
     return (
-      <div style={{ padding: 24 }}>
-        <div>Loading...</div>
+      <div className="min-h-[60vh] flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" aria-hidden />
+          <p className="text-sm text-foreground-muted">Loading...</p>
+        </div>
       </div>
     );
   }

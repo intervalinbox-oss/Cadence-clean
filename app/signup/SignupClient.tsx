@@ -131,7 +131,7 @@ export default function SignupClient() {
             />
 
             {validation && (
-              <p className="text-sm text-orange-600" role="alert">
+              <p className="text-sm text-warning" role="alert">
                 {validation}
               </p>
             )}

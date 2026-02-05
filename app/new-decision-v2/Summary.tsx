@@ -5,6 +5,7 @@ import RulesEngine from "@/app/lib/RulesEngine";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useRouter } from "next/navigation";
 import { generateContent, saveDecision } from "@/app/lib/api";
+import { generateICSFile, downloadICS } from "@/app/lib/calendarUtils";
 import Card from "@/app/components/ui/Card";
 import Button from "@/app/components/ui/Button";
 import Badge from "@/app/components/ui/Badge";
@@ -29,6 +30,7 @@ export default function Summary({ data, onBack }: SummaryProps) {
     type: "agenda" | "email" | "message" | null;
     content: string;
   }>({ type: null, content: "" });
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const rulesResult = useMemo(() => {
     try {
@@ -48,7 +50,9 @@ export default function Summary({ data, onBack }: SummaryProps) {
 
   async function generateContentAsync() {
     if (!rulesResult || !user) return;
-    
+    // #region agent log
+    fetch("http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "Summary.tsx:generateContentAsync:before", message: "Calling generateContent", data: { recommendation: rulesResult?.recommendation, hasInputs: !!data, hasRulesResult: !!rulesResult, inputKeys: data ? Object.keys(data) : [] }, timestamp: Date.now(), sessionId: "debug-session", hypothesisId: "H2" }) }).catch(() => {});
+    // #endregion
     setGenerating(true);
     try {
       const result = await generateContent(data, rulesResult);
@@ -58,6 +62,10 @@ export default function Summary({ data, onBack }: SummaryProps) {
         asyncMessage: result.output.asyncMessage || "",
       });
     } catch (error) {
+      // #region agent log
+      const err = error instanceof Error ? error : new Error(String(error));
+      fetch("http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "Summary.tsx:generateContentAsync:catch", message: "generateContent failed", data: { errorMessage: err.message, errorName: err.name }, timestamp: Date.now(), sessionId: "debug-session", hypothesisId: "H1-H5" }) }).catch(() => {});
+      // #endregion
       console.error("Failed to generate content:", error);
       // Continue without generated content
     } finally {
@@ -68,6 +76,7 @@ export default function Summary({ data, onBack }: SummaryProps) {
   async function handleSave() {
     if (saving || !user || !rulesResult) return;
 
+    setSaveError(null);
     setSaving(true);
     try {
       const decisionData = {
@@ -93,7 +102,7 @@ export default function Summary({ data, onBack }: SummaryProps) {
       router.push(`/decision/${result.id}`);
     } catch (err) {
       console.error("Failed to save decision", err);
-      alert("Failed to save decision. Please try again.");
+      setSaveError("Failed to save decision. Please check your connection and try again.");
       setSaving(false);
     }
   }
@@ -267,11 +276,22 @@ export default function Summary({ data, onBack }: SummaryProps) {
                   <h3 className="text-xl font-semibold text-foreground">Your meeting agenda</h3>
                   <p className="text-sm text-foreground-muted">Ready to copy into your calendar or send to participants</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button size="small" variant="secondary" onClick={() => {
                     navigator.clipboard.writeText(generatedContent.meetingAgenda || "");
                   }}>
                     Copy
+                  </Button>
+                  <Button size="small" variant="secondary" onClick={() => {
+                    const duration = Number(rulesResult.meeting_length) || 30;
+                    const ics = generateICSFile({
+                      title: data?.title || "Meeting",
+                      description: generatedContent.meetingAgenda || "",
+                      duration,
+                    });
+                    downloadICS(ics, `${(data?.title || "meeting").replace(/\s+/g, "-")}.ics`);
+                  }}>
+                    Download .ics
                   </Button>
                   <Button size="small" variant="secondary" onClick={() => {
                     setEditingContent({ type: "agenda", content: generatedContent.meetingAgenda || "" });
@@ -430,6 +450,11 @@ export default function Summary({ data, onBack }: SummaryProps) {
       )}
 
       {/* Actions */}
+      {saveError && (
+        <p className="text-sm text-error mb-4" role="alert">
+          {saveError}
+        </p>
+      )}
       <div className="flex justify-between items-center pt-4">
         <Button variant="tertiary" onClick={onBack} disabled={saving}>
           ← Back

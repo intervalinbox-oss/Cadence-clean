@@ -1,38 +1,55 @@
 @import "tailwindcss";
 
+/*
+  Cadence color system — psychology-led for trust, clarity, and repeated use:
+  - Primary (blue): trust, focus, productivity; one main action color app-wide.
+  - Background/surface: calm neutrals; reduce visual stress and encourage focus.
+  - Foreground: high legibility without harsh black.
+  - Accents: used sparingly for variety (charts, secondary CTAs).
+*/
+
 :root {
-  /* Light theme (Base44 style) */
+  /* Base — calm, spacious, professional */
   --background: #f5f7fa;
   --surface: #ffffff;
   --card: #ffffff;
-  --foreground: #1a1a1a;
-  --foreground-muted: #6b7280;
-  --border: #e5e7eb;
-  
-  /* Accent colors */
-  --accent-blue: #3b82f6;
-  --accent-cyan: #06b6d4;
-  --accent-teal: #14b8a6;
-  --accent-green: #10b981;
-  --accent-purple: #8b5cf6;
-  
-  /* Status colors */
-  --success: #10b981;
-  --warning: #f59e0b;
-  --error: #ef4444;
-  
+  --foreground: #0f172a;
+  --foreground-muted: #64748b;
+  --border: #e2e8f0;
+  --muted: #f1f5f9;
+
+  /* Primary — single source of truth for trust and action (nav, CTAs, links) */
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-muted: #3b82f6;
+
+  /* Semantic aliases (map to primary for uniformity) */
+  --accent-blue: var(--primary);
+  --accent-cyan: #0891b2;
+  --accent-teal: #0d9488;
+  --accent-green: #059669;
+  --accent-purple: #7c3aed;
+
+  /* Status */
+  --success: #059669;
+  --warning: #d97706;
+  --error: #dc2626;
+
   /* Spacing */
-  --spacing-base: 1rem; /* 16px */
+  --spacing-base: 1rem;
 }
 
 [data-theme="dark"] {
-  /* Dark theme (wireframes) */
-  --background: #0a1929;
-  --surface: #0d2847;
-  --card: #153a5b;
-  --foreground: #ffffff;
-  --foreground-muted: #9ca3af;
-  --border: #1e3a5f;
+  --background: #0f172a;
+  --surface: #1e293b;
+  --card: #334155;
+  --foreground: #f8fafc;
+  --foreground-muted: #94a3b8;
+  --border: #334155;
+  --muted: #1e293b;
+  --primary: #3b82f6;
+  --primary-hover: #60a5fa;
+  --primary-muted: #93c5fd;
 }
 
 @theme inline {
@@ -42,6 +59,10 @@
   --color-foreground: var(--foreground);
   --color-foreground-muted: var(--foreground-muted);
   --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-muted: var(--primary-muted);
   --color-accent-blue: var(--accent-blue);
   --color-accent-cyan: var(--accent-cyan);
   --color-accent-teal: var(--accent-teal);
@@ -68,7 +89,7 @@ body {
   outline-offset: 2px;
 }
 
-/* Gradient accent utility */
+/* Gradient accent utility — primary-led for consistency */
 .gradient-accent {
-  background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-cyan) 50%, var(--accent-teal) 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent-cyan) 50%, var(--accent-teal) 100%);
 }

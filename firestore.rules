@@ -19,5 +19,12 @@ service cloud.firestore {
                     && request.resource.data.uid == request.auth.uid;
       allow delete: if false; // Prevent deletion for data integrity
     }
+
+    // Suggestions / feedback - authenticated users can submit; no read (review via Console or admin later)
+    match /suggestions/{suggestionId} {
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid;
+      allow read, update, delete: if false;
+    }
   }
 }
