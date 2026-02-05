@@ -36,23 +36,14 @@ export default function HistoryPage() {
         orderBy("timestamp", "desc")
       );
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'history/page.tsx:39',message:'Setting up Firestore query',data:{hasUser:!!user,userId:user?.uid},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       unsubSnapshot = onSnapshot(
         q,
         (snap) => {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'history/page.tsx:42',message:'Firestore query success',data:{docCount:snap.docs.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
-          // #endregion
           const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
           setDecisions(items as any[]);
           setLoading(false);
         },
         (err) => {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'history/page.tsx:47',message:'Firestore query error',data:{errorMessage:err.message,errorCode:err.code,errorName:err.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
-          // #endregion
           setError(err.message);
           setLoading(false);
         }
@@ -212,10 +203,9 @@ export default function HistoryPage() {
               id="history-search"
             />
             <Select
-              label="Communication Method"
-              helperText="Filter by how the decision was communicated: meeting, email, or async message"
+              label="Communication Type"
               options={[
-                { value: "all", label: "All Methods" },
+                { value: "all", label: "All Types" },
                 { value: "meeting", label: "Meetings" },
                 { value: "email", label: "Emails" },
                 { value: "async_message", label: "Async Messages" },
@@ -245,32 +235,15 @@ export default function HistoryPage() {
         {filteredDecisions.length === 0 ? (
           <Card size="large">
             <div className="text-center py-12">
-              {decisions.length === 0 ? (
-                <>
-                  <div className="text-6xl mb-4">📋</div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">No decisions yet</h3>
-                  <p className="text-foreground-muted mb-6 max-w-md mx-auto">
-                    Your decision history will appear here. Start making decisions to track your communication recommendations and see your impact over time.
-                  </p>
-                  <Link href="/new-decision-v2">
-                    <Button variant="primary">Create Your First Decision</Button>
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <div className="text-5xl mb-4">🔍</div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">No matching decisions</h3>
-                  <p className="text-foreground-muted mb-4">
-                    Try adjusting your search or filters to find what you're looking for.
-                  </p>
-                  <Button variant="secondary" onClick={() => {
-                    setSearchQuery("");
-                    setFilterType("all");
-                    setFilterUrgency("all");
-                  }}>
-                    Clear Filters
-                  </Button>
-                </>
+              <p className="text-foreground-muted mb-4">
+                {decisions.length === 0
+                  ? "No decisions found. Start making decisions to see them here."
+                  : "No decisions match your filters."}
+              </p>
+              {decisions.length === 0 && (
+                <Link href="/new-decision-v2">
+                  <Button variant="primary">Create Your First Decision</Button>
+                </Link>
               )}
             </div>
           </Card>

@@ -21,38 +21,8 @@ export default function QuickMode({ onComplete, onBack }: QuickModeProps) {
     stakeholderCount: "",
     sensitivity: "",
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  const setField = (k: string, v: any) => {
-    setForm((f) => ({ ...f, [k]: v }));
-    // Clear error when user starts typing
-    if (errors[k]) {
-      setErrors((e) => ({ ...e, [k]: "" }));
-    }
-  };
-
-  const validateField = (name: string, value: any) => {
-    if (!touched[name]) return;
-    
-    let error = "";
-    if (name === "title" && !value.trim()) {
-      error = "Topic is required";
-    } else if (name === "purpose" && !value.trim()) {
-      error = "Outcome needed is required";
-    } else if (name === "urgency" && !value) {
-      error = "Urgency level is required";
-    } else if (name === "stakeholderCount" && !value) {
-      error = "Number of stakeholders is required";
-    }
-    
-    setErrors((e) => ({ ...e, [name]: error }));
-  };
-
-  const handleBlur = (name: string) => {
-    setTouched((t) => ({ ...t, [name]: true }));
-    validateField(name, form[name as keyof typeof form]);
-  };
+  const setField = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));
 
   const requiredFilled =
     form.title.trim() &&
@@ -90,7 +60,7 @@ export default function QuickMode({ onComplete, onBack }: QuickModeProps) {
           Find your Cadence
         </h1>
         <p className="text-lg text-foreground-muted">
-          Answer a few questions and we&apos;ll recommend whether to schedule a meeting, send an email, or use async communication — then we&apos;ll compose the email or craft the meeting agenda for you.
+          Answer a few questions and we&apos;ll recommend the best communication method, plus generate tailored content for you.
         </p>
       </div>
 
@@ -98,30 +68,9 @@ export default function QuickMode({ onComplete, onBack }: QuickModeProps) {
       <div className="mb-8">
         <div className="flex justify-between items-center mb-2 text-sm text-foreground-muted">
           <span>Quick Mode</span>
-          <span>{requiredFilled ? "100% complete" : `${Object.values(form).filter(Boolean).length} of 4 required fields`}</span>
+          <span>{requiredFilled ? "100% complete" : "In progress"}</span>
         </div>
         <Progress current={requiredFilled ? 5 : Object.values(form).filter(Boolean).length} total={5} showText={false} />
-        {!requiredFilled && (
-          <div className="mt-3 text-xs text-foreground-muted space-y-1">
-            <div className="font-medium mb-2">Required fields:</div>
-            <div className={`flex items-center gap-2 ${form.title.trim() ? "text-foreground-muted" : "text-warning"}`}>
-              <span>{form.title.trim() ? "✓" : "○"}</span>
-              <span>Topic</span>
-            </div>
-            <div className={`flex items-center gap-2 ${form.purpose.trim() ? "text-foreground-muted" : "text-warning"}`}>
-              <span>{form.purpose.trim() ? "✓" : "○"}</span>
-              <span>Outcome needed</span>
-            </div>
-            <div className={`flex items-center gap-2 ${form.urgency ? "text-foreground-muted" : "text-warning"}`}>
-              <span>{form.urgency ? "✓" : "○"}</span>
-              <span>Urgency level</span>
-            </div>
-            <div className={`flex items-center gap-2 ${form.stakeholderCount ? "text-foreground-muted" : "text-warning"}`}>
-              <span>{form.stakeholderCount ? "✓" : "○"}</span>
-              <span>Number of stakeholders</span>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Form Card */}
@@ -133,67 +82,27 @@ export default function QuickMode({ onComplete, onBack }: QuickModeProps) {
 
         <div className="space-y-6">
           {/* Question 1: Topic */}
-          <div>
-            <Input
-              label="What's the topic? *"
-              helperText="Give this a short, clear title"
-              value={form.title}
-              onChange={(e) => setField("title", e.target.value)}
-              onBlur={() => handleBlur("title")}
-              placeholder="e.g., Q2 Budget Review, Product Launch Alignment"
-              required
-              error={errors.title}
-              id="quick-topic"
-            />
-            <div className="flex flex-wrap gap-2 mt-2">
-              <button
-                type="button"
-                onClick={() => setField("title", "Q2 Budget Review")}
-                className="text-xs px-2 py-1 rounded bg-surface border border-border hover:bg-accent-blue/10 text-foreground-muted hover:text-foreground transition-colors"
-              >
-                Use example: Q2 Budget Review
-              </button>
-              <button
-                type="button"
-                onClick={() => setField("title", "Product Launch Alignment")}
-                className="text-xs px-2 py-1 rounded bg-surface border border-border hover:bg-accent-blue/10 text-foreground-muted hover:text-foreground transition-colors"
-              >
-                Use example: Product Launch Alignment
-              </button>
-            </div>
-          </div>
+          <Input
+            label="What's the topic? *"
+            helperText="Give this a short, clear title"
+            value={form.title}
+            onChange={(e) => setField("title", e.target.value)}
+            placeholder="e.g., Q2 Budget Review, Product Launch Alignment"
+            required
+            id="quick-topic"
+          />
 
           {/* Question 2: Purpose */}
-          <div>
-            <Textarea
-              label="What outcome do you need? *"
-              helperText="Be specific about what you're trying to achieve"
-              value={form.purpose}
-              onChange={(e) => setField("purpose", e.target.value)}
-              onBlur={() => handleBlur("purpose")}
-              placeholder="e.g., Get approval on Q2 spending priorities, Align engineering and product on roadmap priorities..."
-              rows={4}
-              required
-              error={errors.purpose}
-              id="quick-purpose"
-            />
-            <div className="flex flex-wrap gap-2 mt-2">
-              <button
-                type="button"
-                onClick={() => setField("purpose", "Get approval on Q2 spending priorities and resource allocation")}
-                className="text-xs px-2 py-1 rounded bg-surface border border-border hover:bg-accent-blue/10 text-foreground-muted hover:text-foreground transition-colors"
-              >
-                Use example: Budget approval
-              </button>
-              <button
-                type="button"
-                onClick={() => setField("purpose", "Align engineering and product teams on roadmap priorities and dependencies")}
-                className="text-xs px-2 py-1 rounded bg-surface border border-border hover:bg-accent-blue/10 text-foreground-muted hover:text-foreground transition-colors"
-              >
-                Use example: Team alignment
-              </button>
-            </div>
-          </div>
+          <Textarea
+            label="What outcome do you need? *"
+            helperText="Be specific about what you're trying to achieve"
+            value={form.purpose}
+            onChange={(e) => setField("purpose", e.target.value)}
+            placeholder="e.g., Get approval on Q2 spending priorities, Align engineering and product on roadmap priorities..."
+            rows={4}
+            required
+            id="quick-purpose"
+          />
 
           {/* Question 3: Urgency */}
           <Select
@@ -201,14 +110,9 @@ export default function QuickMode({ onComplete, onBack }: QuickModeProps) {
             helperText="Be honest—urgency affects how direct and synchronous your communication should be"
             options={urgencyOptions}
             value={form.urgency}
-            onChange={(e) => {
-              setField("urgency", e.target.value);
-              if (touched.urgency) validateField("urgency", e.target.value);
-            }}
-            onBlur={() => handleBlur("urgency")}
+            onChange={(e) => setField("urgency", e.target.value)}
             placeholder="Select urgency level"
             required
-            error={errors.urgency}
             id="quick-urgency"
           />
 
@@ -218,14 +122,9 @@ export default function QuickMode({ onComplete, onBack }: QuickModeProps) {
             helperText="Larger groups often require different communication approaches"
             options={stakeholderOptions}
             value={form.stakeholderCount}
-            onChange={(e) => {
-              setField("stakeholderCount", e.target.value);
-              if (touched.stakeholderCount) validateField("stakeholderCount", e.target.value);
-            }}
-            onBlur={() => handleBlur("stakeholderCount")}
+            onChange={(e) => setField("stakeholderCount", e.target.value)}
             placeholder="Select number of stakeholders"
             required
-            error={errors.stakeholderCount}
             id="quick-stakeholders"
           />
 

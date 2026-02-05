@@ -1,7 +1,5 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import WizardContainer from "@/app/new-decision-v2/WizardContainer";
-
-export default function Page() {
-  return <WizardContainer />;
+export default function NewDecisionPage() {
+  redirect("/new-decision-v2");
 }

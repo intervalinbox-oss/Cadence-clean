@@ -1,26 +1,74 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Light theme (Base44 style) */
+  --background: #f5f7fa;
+  --surface: #ffffff;
+  --card: #ffffff;
+  --foreground: #1a1a1a;
+  --foreground-muted: #6b7280;
+  --border: #e5e7eb;
+  
+  /* Accent colors */
+  --accent-blue: #3b82f6;
+  --accent-cyan: #06b6d4;
+  --accent-teal: #14b8a6;
+  --accent-green: #10b981;
+  --accent-purple: #8b5cf6;
+  
+  /* Status colors */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  
+  /* Spacing */
+  --spacing-base: 1rem; /* 16px */
+}
+
+[data-theme="dark"] {
+  /* Dark theme (wireframes) */
+  --background: #0a1929;
+  --surface: #0d2847;
+  --card: #153a5b;
+  --foreground: #ffffff;
+  --foreground-muted: #9ca3af;
+  --border: #1e3a5f;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-card: var(--card);
   --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-border: var(--border);
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-cyan: var(--accent-cyan);
+  --color-accent-teal: var(--accent-teal);
+  --color-accent-green: var(--accent-green);
+  --color-accent-purple: var(--accent-purple);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --spacing-base: var(--spacing-base);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+}
+
+/* Focus states for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* Gradient accent utility */
+.gradient-accent {
+  background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-cyan) 50%, var(--accent-teal) 100%);
 }

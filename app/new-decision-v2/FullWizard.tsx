@@ -5,12 +5,16 @@ import Step1_Context from "./steps/Step1_Context";
 import Step2_Timing from "./steps/Step2_Timing";
 import Step3_Stakeholders from "./steps/Step3_Stakeholders";
 import Step4_Sensitivity from "./steps/Step4_Sensitivity";
+import Progress from "@/app/components/ui/Progress";
+import Button from "@/app/components/ui/Button";
+import Card from "@/app/components/ui/Card";
 
 type FullWizardProps = {
   onComplete: (data: any) => void;
+  onBack?: () => void;
 };
 
-export default function FullWizard({ onComplete }: FullWizardProps) {
+export default function FullWizard({ onComplete, onBack }: FullWizardProps) {
   const [step, setStep] = useState<number>(1);
   const [formData, setFormData] = useState<Record<string, any>>({});
 
@@ -25,23 +29,63 @@ export default function FullWizard({ onComplete }: FullWizardProps) {
     return <Step4_Sensitivity data={formData} update={update} />;
   }
 
+  const canProceed = () => {
+    // Basic validation - can be enhanced per step
+    if (step === 1) return formData.title && formData.purpose;
+    if (step === 2) return formData.urgency && formData.decisionTypes?.length > 0;
+    if (step === 3) return formData.stakeholderCount;
+    return true; // Step 4 is optional
+  };
+
   return (
-    <div style={{ padding: 12 }}>
-      <div style={{ marginBottom: 12 }}>{renderStep()}</div>
+    <div className="w-full">
+      {/* Progress Indicator */}
+      <div className="mb-8">
+        <Progress current={step} total={4} />
+      </div>
 
-      <div style={{ display: "flex", gap: 8 }}>
-        <button
-          onClick={() => setStep((s) => Math.max(1, s - 1))}
-          disabled={step <= 1}
-        >
-          Back
-        </button>
+      {/* Step Content */}
+      <Card size="large" className="mb-6">
+        {renderStep()}
+      </Card>
 
-        {step < 4 ? (
-          <button onClick={() => setStep((s) => Math.min(4, s + 1))}>Next</button>
-        ) : (
-          <button onClick={() => onComplete(formData)}>Submit</button>
-        )}
+      {/* Navigation */}
+      <div className="flex justify-between items-center">
+        <div>
+          {step === 1 && onBack ? (
+            <Button variant="tertiary" onClick={onBack}>
+              ← Back to selection
+            </Button>
+          ) : (
+            <Button
+              variant="tertiary"
+              onClick={() => setStep((s) => Math.max(1, s - 1))}
+              disabled={step <= 1}
+            >
+              ← Back
+            </Button>
+          )}
+        </div>
+
+        <div>
+          {step < 4 ? (
+            <Button
+              variant="primary"
+              onClick={() => setStep((s) => Math.min(4, s + 1))}
+              disabled={!canProceed()}
+            >
+              Continue →
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              onClick={() => onComplete(formData)}
+              disabled={!canProceed()}
+            >
+              ✨ Get my recommendation
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

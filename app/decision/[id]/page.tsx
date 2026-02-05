@@ -1,5 +1,5 @@
 import React from "react";
-import ProtectedRoute from "@/app/components/ProtectedRoute";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import DecisionDetailClient from "./DecisionDetailClient";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/app/lib/firebase";

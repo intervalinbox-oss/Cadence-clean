@@ -8,11 +8,8 @@ import Badge from "@/app/components/ui/Badge";
 import Button from "@/app/components/ui/Button";
 import Textarea from "@/app/components/ui/Textarea";
 import Link from "next/link";
-import { generateICSFile, downloadICS, openGoogleCalendar } from "@/app/lib/calendarUtils";
-import { useToast } from "@/app/components/ui/Toast";
 
 export default function DecisionDetailClient({ id }: { id?: string }) {
-  const { showToast, ToastComponent } = useToast();
   const [decision, setDecision] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -131,8 +128,8 @@ export default function DecisionDetailClient({ id }: { id?: string }) {
           <div className="flex items-center gap-4">
             <div className="text-5xl">{display?.icon}</div>
             <div>
-              <div className="text-xs tracking-widest text-foreground-muted mb-1 font-semibold">
-                Cadence Recommends
+              <div className="text-xs uppercase tracking-wide text-foreground-muted mb-1">
+                CADENCE RECOMMENDS
               </div>
               <h2 className="text-3xl font-bold text-foreground">{display?.label}</h2>
               <p className="text-foreground-muted mt-1">{display?.description}</p>
@@ -206,49 +203,18 @@ export default function DecisionDetailClient({ id }: { id?: string }) {
       {/* Generated Content */}
       {recommendation === "meeting" && generatedAgenda && (
         <Card size="large">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-xl font-semibold text-foreground">Your meeting agenda</h3>
-              <p className="text-sm text-foreground-muted">We&apos;ve crafted a complete agenda for you. Ready to copy into your calendar or send to participants.</p>
+              <p className="text-sm text-foreground-muted">Ready to copy into your calendar or send to participants</p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2">
               <Button
                 size="small"
                 variant="secondary"
-                onClick={async () => {
-                  await navigator.clipboard.writeText(generatedAgenda);
-                  showToast("Copied to clipboard!");
-                }}
+                onClick={() => navigator.clipboard.writeText(generatedAgenda)}
               >
                 Copy
-              </Button>
-              <Button
-                size="small"
-                variant="secondary"
-                onClick={() => {
-                  const icsContent = generateICSFile({
-                    title: title,
-                    description: `${purpose}\n\n${generatedAgenda}`,
-                    duration: rulesResult.meeting_length || 30,
-                  });
-                  const filename = `${title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.ics`;
-                  downloadICS(icsContent, filename);
-                }}
-              >
-                Add to Calendar
-              </Button>
-              <Button
-                size="small"
-                variant="secondary"
-                onClick={() => {
-                  openGoogleCalendar({
-                    title: title,
-                    description: `${purpose}\n\n${generatedAgenda}`,
-                    duration: rulesResult.meeting_length || 30,
-                  });
-                }}
-              >
-                Open in Google Calendar
               </Button>
               <Button
                 size="small"
@@ -281,19 +247,16 @@ export default function DecisionDetailClient({ id }: { id?: string }) {
 
       {recommendation === "email" && generatedEmail && (
         <Card size="large">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-xl font-semibold text-foreground">Your draft email</h3>
-              <p className="text-sm text-foreground-muted">We&apos;ve composed a complete email for you. Ready to copy, customize, and send.</p>
+              <p className="text-sm text-foreground-muted">Ready to copy, customize, and send</p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2">
               <Button
                 size="small"
                 variant="secondary"
-                onClick={async () => {
-                  await navigator.clipboard.writeText(generatedEmail);
-                  showToast("Copied to clipboard!");
-                }}
+                onClick={() => navigator.clipboard.writeText(generatedEmail)}
               >
                 Copy
               </Button>
@@ -353,9 +316,6 @@ export default function DecisionDetailClient({ id }: { id?: string }) {
           </div>
         </Card>
       )}
-
-      {/* Toast Notification */}
-      {ToastComponent}
     </div>
   );
 }

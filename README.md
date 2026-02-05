@@ -1,36 +1,113 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cadence - Communication Decision Engine
+
+An AI-powered communication decision support system that recommends the optimal communication method (meeting, email, or async message) and generates ready-to-use content for executives.
+
+## Tech Stack
+
+- **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS 4
+- **Backend**: Firebase Cloud Functions (Express REST API)
+- **Database**: Firestore
+- **Authentication**: Firebase Auth
+- **AI**: Claude 3 Sonnet (via Anthropic API)
+- **Hosting**: Vercel (frontend), Firebase (backend)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js 18+
+- Firebase CLI
+- Firebase project with Firestore and Functions enabled
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   cd functions && npm install && cd ..
+   ```
+
+3. Set up environment variables:
+   - Copy `.env.example` to `.env.local`
+   - Fill in your Firebase configuration
+   - Set `NEXT_PUBLIC_FIREBASE_FUNCTIONS_URL` after deploying functions
+
+4. Initialize Firebase (if not already done):
+   ```bash
+   firebase init
+   ```
+   Select: Firestore, Functions
+
+5. Set Firebase Functions environment variables:
+   ```bash
+   firebase functions:config:set claude.api_key="your_claude_api_key"
+   ```
+
+### Development
+
+1. Start the Next.js dev server:
+   ```bash
+   npm run dev
+   ```
+
+2. (Optional) Start Firebase emulators:
+   ```bash
+   firebase emulators:start
+   ```
+
+### Deployment
+
+#### Frontend (Vercel)
+
+1. Connect your GitHub repository to Vercel
+2. Add environment variables in Vercel dashboard
+3. Deploy automatically on push to main
+
+#### Backend (Firebase Functions)
+
+1. Deploy functions:
+   ```bash
+   cd functions
+   firebase deploy --only functions
+   ```
+
+2. Update `NEXT_PUBLIC_FIREBASE_FUNCTIONS_URL` in Vercel with your deployed function URL
+
+## Project Structure
+
+```
+/app
+  /components        # React components
+    /ui              # Reusable UI components
+    /dashboard       # Dashboard-specific components
+    /charts          # Chart components
+  /new-decision-v2   # Decision wizard (Quick Mode & Full Wizard)
+  /dashboard         # Analytics dashboard
+  /history           # Decision history
+  /decision/[id]     # Decision detail page
+  /lib               # Utilities (Firebase, API client, RulesEngine)
+/functions           # Firebase Cloud Functions
+  /src
+    /api.js          # Express app
+    /generate.js     # Claude integration
+    /dashboard.js    # Dashboard endpoints
+    /saveDecision.js # Save decision endpoint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Quick Mode**: 5 essential questions for fast recommendations
+- **Full Wizard**: Comprehensive 4-step questionnaire
+- **AI Content Generation**: Automatically generates meeting agendas, emails, and async messages
+- **Analytics Dashboard**: Track decisions, time saved, and communication patterns
+- **Decision History**: Searchable archive of past decisions
+- **WCAG 2.2 AA Compliant**: Fully accessible interface
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment Variables
 
-## Learn More
+See `.env.example` for required environment variables.
 
-To learn more about Next.js, take a look at the following resources:
+## License
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Private - All rights reserved
