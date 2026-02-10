@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Step1_Context from "./steps/Step1_Context";
 import Step2_Timing from "./steps/Step2_Timing";
 import Step3_Stakeholders from "./steps/Step3_Stakeholders";
@@ -17,10 +17,33 @@ type FullWizardProps = {
 export default function FullWizard({ onComplete, onBack }: FullWizardProps) {
   const [step, setStep] = useState<number>(1);
   const [formData, setFormData] = useState<Record<string, any>>({});
+  const [fade, setFade] = useState<"in" | "out">("in");
 
   const update = (patch: Record<string, any>) => {
     setFormData((prev) => ({ ...prev, ...patch }));
   };
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
+
+  const goNext = useCallback(() => {
+    if (step >= 4) return;
+    setFade("out");
+    setTimeout(() => {
+      setStep((s) => Math.min(4, s + 1));
+      setFade("in");
+    }, 150);
+  }, [step]);
+
+  const goBack = useCallback(() => {
+    if (step <= 1) return;
+    setFade("out");
+    setTimeout(() => {
+      setStep((s) => Math.max(1, s - 1));
+      setFade("in");
+    }, 150);
+  }, [step]);
 
   function renderStep() {
     if (step === 1) return <Step1_Context data={formData} update={update} />;
@@ -44,8 +67,13 @@ export default function FullWizard({ onComplete, onBack }: FullWizardProps) {
         <Progress current={step} total={4} />
       </div>
 
-      {/* Step Content */}
-      <Card size="large" className="mb-6">
+      {/* Step Content with fade transition */}
+      <Card
+        size="large"
+        className={`mb-6 transition-opacity duration-150 ${
+          fade === "in" ? "opacity-100" : "opacity-0"
+        }`}
+      >
         {renderStep()}
       </Card>
 
@@ -59,7 +87,7 @@ export default function FullWizard({ onComplete, onBack }: FullWizardProps) {
           ) : (
             <Button
               variant="tertiary"
-              onClick={() => setStep((s) => Math.max(1, s - 1))}
+              onClick={goBack}
               disabled={step <= 1}
             >
               ← Back
@@ -71,7 +99,7 @@ export default function FullWizard({ onComplete, onBack }: FullWizardProps) {
           {step < 4 ? (
             <Button
               variant="primary"
-              onClick={() => setStep((s) => Math.min(4, s + 1))}
+              onClick={goNext}
               disabled={!canProceed()}
             >
               Continue →

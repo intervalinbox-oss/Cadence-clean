@@ -30,7 +30,6 @@ export default function Textarea({
           className="block text-sm font-medium text-foreground mb-1.5"
         >
           {label}
-          {required && <span className="text-error ml-1" aria-label="required">*</span>}
         </label>
       )}
       <textarea

@@ -8,6 +8,7 @@ exports.api = onRequest(
   {
     cors: true,
     region: "us-central1",
+    timeoutSeconds: 120,
     secrets: ["CLAUDE_API_KEY", "INTERNAL_API_SECRET"],
   },
   api

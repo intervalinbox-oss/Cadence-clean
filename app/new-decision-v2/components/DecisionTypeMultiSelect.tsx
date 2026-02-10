@@ -52,8 +52,7 @@ export default function DecisionTypeMultiSelect({
   return (
     <div className="w-full">
       <label className="block text-sm font-medium text-foreground mb-1.5">
-        What type of decision are you making?{" "}
-        {required && <span className="text-error" aria-label="required">*</span>}
+        What type of decision are you making? *
       </label>
       {helperText && (
         <p className="text-sm text-foreground-muted mb-4">{helperText}</p>

@@ -41,16 +41,16 @@ export default function Summary({ data, onBack }: SummaryProps) {
     }
   }, [data]);
 
-  // Generate content when component mounts
+  // Generate content when component mounts; set generating immediately for responsive UX
   useEffect(() => {
     if (rulesResult && user) {
+      setGenerating(true);
       generateContentAsync();
     }
   }, [rulesResult, user]);
 
   async function generateContentAsync() {
     if (!rulesResult || !user) return;
-    setGenerating(true);
     try {
       const result = await generateContent(data, rulesResult);
       setGeneratedContent({
@@ -90,6 +90,27 @@ export default function Summary({ data, onBack }: SummaryProps) {
           recommendations: rulesResult,
         },
       };
+
+      // #region agent log
+      fetch("http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: `log_${Date.now()}_frontend_timeline`,
+          timestamp: Date.now(),
+          location: "app/new-decision-v2/Summary.tsx:handleSave",
+          message: "decisionData timeline vs time_sensitivity before saveDecision",
+          runId: "pre-fix",
+          hypothesisId: "H1",
+          data: {
+            timeline: (decisionData as any).timeline,
+            time_sensitivity: (decisionData as any).time_sensitivity,
+            hasInputs: !!(decisionData as any).inputs,
+            keys: Object.keys(decisionData),
+          },
+        }),
+      }).catch(() => {});
+      // #endregion
 
       const result = await saveDecision(decisionData, rulesResult.time_saved_minutes || 0);
       router.push(`/decision/${result.id}`);
@@ -147,10 +168,10 @@ export default function Summary({ data, onBack }: SummaryProps) {
   }
 
   const display = getRecommendationDisplay();
-  const bpList = rulesResult.best_practices
-    ?.split(".")
-    .map((s: string) => s.trim())
-    .filter(Boolean) || [];
+  const bpList = (rulesResult.best_practices
+    ?.split("\n")
+    .map((s: string) => s.trim().replace(/\s*\(\s*e\s+g\s*,\s*/gi, " (e.g., "))
+    .filter((s: string) => s.length > 2) || []) as string[];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -165,43 +186,54 @@ export default function Summary({ data, onBack }: SummaryProps) {
       </div>
 
       {/* Recommendation Card */}
-      <Card size="large" className="relative">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <div className="text-5xl">{display?.icon}</div>
-            <div>
-              <div className="text-xs uppercase tracking-wide text-foreground-muted mb-1">
-                CADENCE RECOMMENDS
+      <div className="space-y-3">
+        <Card size="large" className="relative">
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex items-center gap-4">
+              <div className="text-5xl">{display?.icon}</div>
+              <div>
+                <div className="text-xs uppercase tracking-wide text-foreground-muted mb-1">
+                  CADENCE RECOMMENDS
+                </div>
+                <h2 className="text-3xl font-bold text-foreground">
+                  {display?.label}
+                </h2>
+                <p className="text-foreground-muted mt-1">
+                  {display?.description}
+                </p>
               </div>
-              <h2 className="text-3xl font-bold text-foreground">
-                {display?.label}
-              </h2>
-              <p className="text-foreground-muted mt-1">{display?.description}</p>
             </div>
+            <Badge variant="success" className="text-sm">
+              {rulesResult.confidence_score}% confidence
+            </Badge>
           </div>
-          <Badge variant="success" className="text-sm">
-            {rulesResult.confidence_score}% confidence
-          </Badge>
-        </div>
-      </Card>
+        </Card>
 
-      {/* Time Saved Banner */}
-      {rulesResult.time_saved_minutes > 0 && (
-        <Card size="medium" className="bg-success/10 border-success/20">
-          <div className="flex items-center gap-4">
-            <div className="text-3xl">⏱️</div>
-            <div>
-              <div className="text-sm text-foreground-muted">Time Saved</div>
-              <div className="text-2xl font-bold text-success">
-                {rulesResult.time_saved_minutes} minutes
+        {/* Time Saved — light green card directly under recommendation, only when time saved > 0 */}
+        {rulesResult.time_saved_minutes > 0 && (
+          <Card
+            size="medium"
+            className="bg-success/10 border border-success/20 shadow-sm"
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="text-2xl">⏱️</div>
+                <div>
+                  <div className="text-sm font-medium text-foreground-muted">
+                    Time Saved
+                  </div>
+                  <div className="text-2xl font-bold text-success">
+                    {rulesResult.time_saved_minutes} minutes
+                  </div>
+                </div>
               </div>
-              <div className="text-sm text-foreground-muted mt-1">
+              <div className="text-sm text-foreground-muted text-right shrink-0">
                 By choosing the right communication channel
               </div>
             </div>
-          </div>
-        </Card>
-      )}
+          </Card>
+        )}
+      </div>
 
       {/* Why Cadence Chose This */}
       <Card size="large">
@@ -228,7 +260,7 @@ export default function Summary({ data, onBack }: SummaryProps) {
               <div className="text-sm font-medium text-foreground-muted">Duration</div>
             </div>
             <div className="text-lg font-bold text-foreground">
-              {rulesResult.meeting_length || 30}-{rulesResult.meeting_length ? rulesResult.meeting_length + 15 : 45} minutes
+              {rulesResult.meeting_length || 30} minutes
             </div>
           </Card>
           <Card size="small">
@@ -237,7 +269,7 @@ export default function Summary({ data, onBack }: SummaryProps) {
               <div className="text-sm font-medium text-foreground-muted">Cadence</div>
             </div>
             <div className="text-lg font-bold text-foreground">
-              {rulesResult.meeting_cadence === "one_off" ? "One-time" : rulesResult.meeting_cadence}
+              {rulesResult.meeting_cadence}
             </div>
           </Card>
           <Card size="small">
@@ -254,9 +286,14 @@ export default function Summary({ data, onBack }: SummaryProps) {
 
       {/* Generated Content */}
       {generating ? (
-        <Card size="large">
-          <div className="text-center py-8">
-            <div className="text-foreground-muted">Generating content...</div>
+        <Card size="large" className="overflow-hidden">
+          <div className="animate-pulse space-y-4 py-6 px-4">
+            <div className="h-5 bg-border/50 rounded w-1/3" />
+            <div className="h-4 bg-border/40 rounded w-full" />
+            <div className="h-4 bg-border/40 rounded w-5/6" />
+            <div className="h-4 bg-border/40 rounded w-4/6" />
+            <div className="h-20 bg-border/30 rounded w-full mt-4" />
+            <div className="text-center text-sm text-foreground-muted pt-2">Generating content...</div>
           </div>
         </Card>
       ) : (
@@ -270,6 +307,17 @@ export default function Summary({ data, onBack }: SummaryProps) {
                   <p className="text-sm text-foreground-muted">Ready to copy into your calendar or send to participants</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  <Button size="small" variant="primary" onClick={() => {
+                    const duration = Number(rulesResult.meeting_length) || 30;
+                    const ics = generateICSFile({
+                      title: data?.title || "Meeting",
+                      description: generatedContent.meetingAgenda || "",
+                      duration,
+                    });
+                    navigator.clipboard.writeText(ics);
+                  }}>
+                    Copy to Calendar
+                  </Button>
                   <Button size="small" variant="secondary" onClick={() => {
                     navigator.clipboard.writeText(generatedContent.meetingAgenda || "");
                   }}>
@@ -284,7 +332,7 @@ export default function Summary({ data, onBack }: SummaryProps) {
                     });
                     downloadICS(ics, `${(data?.title || "meeting").replace(/\s+/g, "-")}.ics`);
                   }}>
-                    Download .ics
+                    Download
                   </Button>
                   <Button size="small" variant="secondary" onClick={() => {
                     setEditingContent({ type: "agenda", content: generatedContent.meetingAgenda || "" });

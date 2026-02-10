@@ -57,11 +57,12 @@ export default function Step4_Sensitivity({ data, update }: Step4Props) {
           onChange={(e) => update({ emotionalRisk: e.target.value })}
           placeholder="Select sensitivity level"
           id="step4-emotional-risk"
+          onEnterKey={() => document.getElementById("step4-change-impact")?.focus()}
         />
       </Card>
 
       {/* Change Impact */}
-      <Card size="medium" className="bg-warning/5 border-warning/20">
+      <Card size="medium" className="bg-card border-border">
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-foreground mb-1">Change Impact</h3>
           <p className="text-sm text-foreground-muted">Bigger changes require more thoughtful communication planning.</p>
@@ -72,6 +73,7 @@ export default function Step4_Sensitivity({ data, update }: Step4Props) {
           onChange={(e) => update({ changeImpact: e.target.value })}
           placeholder="Select change impact level"
           id="step4-change-impact"
+          onEnterKey={() => document.getElementById("step4-communication-style")?.focus()}
         />
       </Card>
 
@@ -87,6 +89,7 @@ export default function Step4_Sensitivity({ data, update }: Step4Props) {
           onChange={(e) => update({ communicationStyle: e.target.value })}
           placeholder="Select communication style"
           id="step4-communication-style"
+          onEnterKey={() => document.getElementById("step4-additional-context")?.focus()}
         />
       </Card>
 

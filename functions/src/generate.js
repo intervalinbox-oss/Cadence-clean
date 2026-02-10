@@ -67,11 +67,13 @@ async function generateCadence(req, res) {
       });
     }
 
-    // Call Claude API
+    // Call Claude API (model override via CLAUDE_MODEL env; keep max_tokens modest for latency)
+    const modelId = process.env.CLAUDE_MODEL || "claude-sonnet-4-20250514";
     const claudeClient = getClaudeClient();
+    const startMs = Date.now();
     const result = await claudeClient.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 2000,
+      model: modelId,
+      max_tokens: 1000,
       messages: [
         {
           role: "user",
@@ -79,6 +81,8 @@ async function generateCadence(req, res) {
         },
       ],
     });
+    const latencyMs = Date.now() - startMs;
+    console.log("generateCadence Claude latency_ms", latencyMs);
 
     const generatedText = result.content[0].text || "";
 

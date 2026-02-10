@@ -3,7 +3,7 @@
 import React from "react";
 import Input from "@/app/components/ui/Input";
 import Select from "@/app/components/ui/Select";
-import DecisionTypeMultiSelect from "../components/DecisionTypeMultiSelect";
+import DecisionTypeMultiSelect, { type DecisionType } from "../components/DecisionTypeMultiSelect";
 
 type Step2Props = {
   data: Record<string, any>;
@@ -13,7 +13,7 @@ type Step2Props = {
 export default function Step2_Timing({ data, update }: Step2Props) {
   const urgency = data?.urgency ?? "";
   const complexity = data?.complexity ?? "";
-  const decisionTypes = (data?.decisionTypes || []) as string[];
+  const decisionTypes = (data?.decisionTypes || []) as DecisionType[];
   const timeSensitivity = data?.time_sensitivity ?? "";
 
   const urgencyOptions = [
@@ -46,6 +46,7 @@ export default function Step2_Timing({ data, update }: Step2Props) {
         onChange={(e) => update({ time_sensitivity: e.target.value })}
         placeholder="e.g., By Friday EOD, Before next board meeting, No rush"
         id="step2-timeline"
+        onEnterKey={() => document.getElementById("step2-urgency")?.focus()}
       />
 
       {/* Urgency */}
@@ -58,6 +59,7 @@ export default function Step2_Timing({ data, update }: Step2Props) {
         placeholder="Select urgency level"
         required
         id="step2-urgency"
+        onEnterKey={() => document.getElementById("step2-complexity")?.focus()}
       />
 
       {/* Decision Types */}

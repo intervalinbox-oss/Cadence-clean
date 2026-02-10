@@ -4,6 +4,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   helperText?: string;
+  onEnterKey?: () => void;
 }
 
 export default function Input({
@@ -13,8 +14,17 @@ export default function Input({
   id,
   className = "",
   required,
+  onEnterKey,
+  onKeyDown,
   ...props
 }: InputProps) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && onEnterKey) {
+      e.preventDefault();
+      onEnterKey();
+    }
+    onKeyDown?.(e);
+  };
   // Use React's useId() hook for stable SSR-safe IDs
   const generatedId = useId();
   const inputId = id || generatedId;
@@ -32,7 +42,6 @@ export default function Input({
           className="block text-sm font-medium text-foreground mb-1.5"
         >
           {label}
-          {required && <span className="text-error ml-1" aria-label="required">*</span>}
         </label>
       )}
       <input
@@ -41,6 +50,7 @@ export default function Input({
         aria-invalid={hasError}
         aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
         required={required}
+        onKeyDown={handleKeyDown}
         {...props}
       />
       {error && (

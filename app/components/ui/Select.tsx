@@ -11,6 +11,7 @@ interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>
   helperText?: string;
   options: SelectOption[];
   placeholder?: string;
+  onEnterKey?: () => void;
 }
 
 export default function Select({
@@ -22,10 +23,19 @@ export default function Select({
   id,
   className = "",
   required,
+  onEnterKey,
+  onKeyDown,
   ...props
 }: SelectProps) {
   const selectId = id || `select-${Math.random().toString(36).substr(2, 9)}`;
   const hasError = !!error;
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLSelectElement>) => {
+    if (e.key === "Enter" && onEnterKey) {
+      e.preventDefault();
+      onEnterKey();
+    }
+    onKeyDown?.(e);
+  };
   
   const selectStyles = `w-full px-3 py-2 bg-surface border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent transition-all appearance-none cursor-pointer ${
     hasError ? "border-error focus:ring-error" : "border-border"
@@ -39,7 +49,6 @@ export default function Select({
           className="block text-sm font-medium text-foreground mb-1.5"
         >
           {label}
-          {required && <span className="text-error ml-1" aria-label="required">*</span>}
         </label>
       )}
       <div className="relative">
@@ -49,6 +58,7 @@ export default function Select({
           aria-invalid={hasError}
           aria-describedby={error ? `${selectId}-error` : helperText ? `${selectId}-helper` : undefined}
           required={required}
+          onKeyDown={handleKeyDown}
           {...props}
         >
           {placeholder && (

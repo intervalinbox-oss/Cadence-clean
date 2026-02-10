@@ -15,45 +15,22 @@ function buildMeetingAgendaPrompt(inputs, rulesResult) {
     timeSensitivity = "",
   } = inputs;
 
-  const { meeting_length = 30, participants = [], meeting_cadence = "one_off" } = rulesResult || {};
+  const { meeting_length = 30, participants = [], meeting_cadence = "One-time meeting (no regular cadence)" } = rulesResult || {};
 
-  const styleGuidance = {
-    brief: "Be concise and direct. Use bullet points. Get to the point quickly.",
-    detailed: "Provide full context and background. Include comprehensive information.",
-    directive: "Use clear, authoritative language. State expectations explicitly.",
-    empathetic: "Use supportive, understanding tone. Acknowledge concerns.",
-    executive: "Provide high-level summary. Focus on strategic implications.",
-  }[communicationStyle] || styleGuidance.detailed;
+  const styleMap = {
+    brief: "Be concise. Use bullets. Get to the point quickly.",
+    detailed: "Full context and background. Be thorough.",
+    directive: "Clear, authoritative. State expectations explicitly.",
+    empathetic: "Supportive tone. Acknowledge concerns.",
+    executive: "High-level summary. Strategic implications.",
+  };
+  const styleGuidance = styleMap[communicationStyle] || styleMap.detailed;
 
-  return `You are a communication expert helping executives create effective meeting agendas.
+  return `Create a plain text meeting agenda. Sentence case, no markdown. Style: ${styleGuidance}
 
-Generate a professional meeting agenda with the following requirements:
-- Use sentence case throughout (no title case, no all caps)
-- Do NOT use markdown formatting (no #, *, -, etc.)
-- Write in plain text with clear line breaks
-- Match the communication style: ${styleGuidance}
+Details: title: ${title || "Team Meeting"} | purpose: ${purpose || "Not specified"} | duration: ${meeting_length} min | cadence: ${meeting_cadence} | urgency: ${urgency} | complexity: ${complexity} | stakeholders: ${stakeholderCount} | decision types: ${decisionTypes.join(", ") || "General discussion"}${timeSensitivity ? ` | timeline: ${timeSensitivity}` : ""} | participants: ${participants.join(", ") || "Team members"}
 
-Meeting Details:
-- Title: ${title || "Team Meeting"}
-- Purpose: ${purpose || "Not specified"}
-- Duration: ${meeting_length} minutes
-- Cadence: ${meeting_cadence}
-- Urgency: ${urgency}
-- Complexity: ${complexity}
-- Stakeholder Count: ${stakeholderCount}
-- Decision Types: ${decisionTypes.join(", ") || "General discussion"}
-${timeSensitivity ? `- Timeline: ${timeSensitivity}` : ""}
-- Participants: ${participants.join(", ") || "Team members"}
-
-Generate a time-blocked meeting agenda with:
-1. Meeting title
-2. Purpose statement (1-2 sentences)
-3. Desired outcomes (3-5 bullet points)
-4. Participants list with their roles/responsibilities
-5. Agenda items with time allocations (time-blocked format)
-6. Pre-work and materials section
-
-Format the output as plain text with clear sections. Use line breaks to separate sections. Do not use markdown symbols.`;
+Output structure: (1) meeting title (2) 1–2 sentence purpose (3) 3–5 desired outcomes (4) participants with roles (5) agenda items with time blocks totaling ${meeting_length} min (6) pre-work/materials.`;
 }
 
 function buildEmailPrompt(inputs, rulesResult) {
@@ -76,42 +53,22 @@ function buildEmailPrompt(inputs, rulesResult) {
 
   return `You are a communication expert helping executives write professional emails.
 
-Generate a ready-to-send email with the following requirements:
-- Use sentence case throughout (no title case except for proper nouns)
-- Do NOT use markdown formatting (no #, *, -, etc.)
-- Write in plain text with clear paragraphs
-- Match the communication style: ${styleGuidance}
-- Include a clear subject line
-- Include a greeting
-- Provide context
-- State the clear ask or purpose
-- Include next steps
+Write a ready-to-send plain text email. Use sentence case, no markdown symbols, and match this style: ${styleGuidance}
 
-Email Details:
-- Topic: ${title || "Update"}
-- Purpose: ${purpose || "Not specified"}
-- Urgency: ${urgency}
-${timeSensitivity ? `- Timeline: ${timeSensitivity}` : ""}
-${stakeholderGroups ? `- Stakeholder Groups: ${stakeholderGroups}` : ""}
+Email details:
+- topic: ${title || "Update"}
+- purpose: ${purpose || "Not specified"}
+- urgency: ${urgency}
+${timeSensitivity ? `- timeline: ${timeSensitivity}` : ""}
+${stakeholderGroups ? `- stakeholder groups: ${stakeholderGroups}` : ""}
 
-Generate the email in this format:
-Subject: [Clear, concise subject line]
-
-[Greeting],
-
-[Context paragraph explaining the situation]
-
-[Main ask or purpose - what you need from recipients]
-
-Next steps:
-- [Action item 1]
-- [Action item 2]
-- [Action item 3]
-
-[Closing],
-[Your name]
-
-Use plain text only. No markdown. Use line breaks for readability.`;
+Follow this structure:
+- clear, concise subject line
+- short greeting
+- 1–2 short paragraphs of context
+- one paragraph stating the main ask or decision needed
+- a short \"Next steps\" list with 2–4 action items
+- brief closing and sender name`;
 }
 
 function buildAsyncMessagePrompt(inputs, rulesResult) {
@@ -131,28 +88,22 @@ function buildAsyncMessagePrompt(inputs, rulesResult) {
     executive: "High-level summary. Key points only.",
   }[communicationStyle] || styleGuidance.brief;
 
-  return `You are a communication expert helping executives write async messages (Slack/Teams).
+  return `You are a communication expert helping executives write async messages (Slack or Teams).
 
-Generate a concise async message with the following requirements:
-- Use sentence case throughout
-- Do NOT use markdown formatting
-- Keep it brief and scannable
-- Use emoji sparingly and appropriately (1-2 max)
-- Match the communication style: ${styleGuidance}
+Write a concise, plain text message. Use sentence case, no markdown, and keep it brief and scannable. Match this style: ${styleGuidance}
 
-Message Details:
-- Topic: ${title || "Update"}
-- Purpose: ${purpose || "Not specified"}
-- Urgency: ${urgency}
-${timeSensitivity ? `- Timeline: ${timeSensitivity}` : ""}
+Message details:
+- topic: ${title || "Update"}
+- purpose: ${purpose || "Not specified"}
+- urgency: ${urgency}
+${timeSensitivity ? `- timeline: ${timeSensitivity}` : ""}
 
-Generate a Slack/Teams-style message that:
-1. Starts with a brief context (1-2 sentences)
-2. States the key point or ask clearly
-3. Includes timeline if relevant
-4. Ends with clear next steps or call to action
-
-Format as plain text. Use line breaks for readability. Keep it under 150 words.`;
+Structure:
+- 1–2 sentences of context
+- one sentence stating the key point or ask
+- mention timing or deadline if relevant
+- 2–3 short bullet-like lines for next steps or actions
+Keep the whole message under 150 words.`;
 }
 
 module.exports = {

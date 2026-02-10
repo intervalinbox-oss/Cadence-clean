@@ -38,6 +38,7 @@ export default function Step3_Stakeholders({ data, update }: Step3Props) {
         placeholder="Select number of stakeholders"
         required
         id="step3-stakeholder-count"
+        onEnterKey={() => document.getElementById("step3-stakeholder-groups")?.focus()}
       />
 
       {/* Stakeholder Groups */}
@@ -48,6 +49,7 @@ export default function Step3_Stakeholders({ data, update }: Step3Props) {
         onChange={(e) => update({ stakeholderGroups: e.target.value })}
         placeholder="e.g., Engineering, Product, Finance, Sales"
         id="step3-stakeholder-groups"
+        onEnterKey={() => document.getElementById("step3-cross-team")?.focus()}
       />
 
       {/* Cross-team Dependencies */}

@@ -48,6 +48,7 @@ export default function Step1_Context({ data, update }: Step1Props) {
         placeholder="e.g., Q2 Budget Approval, Product Launch Alignment"
         required
         id="step1-topic"
+        onEnterKey={() => document.getElementById("step1-purpose")?.focus()}
       />
 
       {/* Recurring vs One-off */}

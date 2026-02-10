@@ -10,6 +10,10 @@ export interface WizardFormData {
   crossTeamDependencies?: boolean;
   emotionalRisk?: 'none' | 'low' | 'medium' | 'high';
   changeImpact?: 'none' | 'low' | 'medium' | 'high';
+  // recurrence details used for cadence calculation
+  is_recurring?: boolean;
+  recurring_type?: 'project' | 'team' | 'company';
+  project_length?: '1-3_months' | '3-6_months' | '6-12_months' | '12+_months';
   // allow extra fields -- engine should be resilient
   [key: string]: any;
 }
@@ -40,6 +44,9 @@ export default class RulesEngine {
       crossTeamDependencies = false,
       emotionalRisk = 'none',
       changeImpact = 'none',
+      is_recurring = false,
+      recurring_type,
+      project_length,
     } = formData || {};
 
     const urgencyWeights: Record<Urgency, number> = {
@@ -144,8 +151,8 @@ export default class RulesEngine {
     if (meetingPct < 15 && emailPct < 15 && asyncPct < 15) {
       recommendation = 'no_action';
     } else {
-      const scores = [ ['meeting', meetingPct], ['email', emailPct], ['async', asyncPct] ] as const;
-      scores.sort((a,b) => b[1] - a[1]);
+      const scores: [string, number][] = [ ['meeting', meetingPct], ['email', emailPct], ['async', asyncPct] ];
+      scores.sort((a, b) => b[1] - a[1]);
       const top = scores[0][0];
       const topVal = scores[0][1];
       const secondVal = scores[1][1];
@@ -165,23 +172,57 @@ export default class RulesEngine {
       }
     }
 
-    // meeting length estimation
+    // meeting length estimation - based solely on complexity band
     let meeting_length = 0;
     if (recommendation === 'meeting') {
-      const base = 15;
-      const complexityAdd = c * 10; // moderate +10, complex +30
-      const stakeholderAdd = s * 5; // 3-5 -> +10 etc.
-      const decisionTypeAdd = dtMeeting >= 4 ? 20 : dtMeeting >= 2 ? 10 : 0;
-      meeting_length = Math.min(180, Math.round(base + complexityAdd + stakeholderAdd + decisionTypeAdd));
+      switch (complexity) {
+        case 'highly_complex':
+          // 60–90 minutes -> choose midpoint
+          meeting_length = 75;
+          break;
+        case 'complex':
+          // 45–60 minutes
+          meeting_length = 50;
+          break;
+        case 'moderate':
+          // 30–45 minutes
+          meeting_length = 35;
+          break;
+        case 'simple':
+        default:
+          // 15–30 minutes
+          meeting_length = 20;
+          break;
+      }
     }
 
-    // meeting cadence
-    let meeting_cadence = 'one_off';
-    if (decisionTypes.includes('decide') || decisionTypes.includes('align') || decisionTypes.includes('brainstorm')) {
-      meeting_cadence = crossTeamDependencies ? 'weekly' : 'one_off';
+    // meeting cadence - driven by recurrence fields
+    let meeting_cadence = 'One-time meeting (no regular cadence)';
+    if (recommendation === 'meeting') {
+      if (!is_recurring) {
+        meeting_cadence = 'One-time meeting (no regular cadence)';
+      } else if (recurring_type === 'project') {
+        switch (project_length) {
+          case '1-3_months':
+            meeting_cadence = 'Weekly standup (15 min) + Bi-weekly planning (45 min) + Kick-off & Retro';
+            break;
+          case '3-6_months':
+            meeting_cadence = 'Weekly standup + Weekly planning (30 min) + Monthly review (60 min)';
+            break;
+          case '6-12_months':
+            meeting_cadence = 'Daily standup + Weekly planning (45 min) + Bi-weekly stakeholder sync + Monthly retro';
+            break;
+          case '12+_months':
+          default:
+            meeting_cadence = 'Daily standup + Weekly planning + Bi-weekly stakeholder sync + Monthly retro + Quarterly review (90 min)';
+            break;
+        }
+      } else if (recurring_type === 'team') {
+        meeting_cadence = 'Weekly team sync (30–45 min)';
+      } else if (recurring_type === 'company') {
+        meeting_cadence = 'Monthly all-hands (45–60 min)';
+      }
     }
-    if (decisionTypes.includes('escalate')) meeting_cadence = 'weekly';
-    if (decisionTypes.includes('update') && (stakeholderCount === '10+' || crossTeamDependencies)) meeting_cadence = 'biweekly';
 
     // participants recommendation (simple, deterministic)
     const participants: string[] = [];
@@ -199,25 +240,62 @@ export default class RulesEngine {
     if (emotionalRisk === 'high') participants.push('HR or people lead (optional)');
     if (complexity !== 'simple') participants.push('Subject matter experts');
 
-    // time saved estimate: compare meeting vs async/email
+    // time saved estimate: compare meeting vs async/email using a simple baseline
     const estimatedAsyncTime = 10; // minutes to draft an async update or email
     let time_saved_minutes = 0;
     if (recommendation === 'async_message' || recommendation === 'email') {
-      // estimate that replacing a meeting saves the meeting_length - async time
-      const hypotheticalMeeting = meeting_length || Math.min(60, Math.round(15 + c * 12 + s * 4));
+      // estimate that replacing a meeting saves the baseline meeting time minus async time
+      const baselineMeeting = (() => {
+        switch (complexity) {
+          case 'highly_complex':
+            return 80; // slightly above our recommendation midpoint
+          case 'complex':
+            return 60;
+          case 'moderate':
+            return 45;
+          case 'simple':
+          default:
+            return 30;
+        }
+      })();
+      const hypotheticalMeeting = baselineMeeting;
       time_saved_minutes = Math.max(0, hypotheticalMeeting - estimatedAsyncTime);
     } else if (recommendation === 'cancel_meeting') {
-      const hypotheticalMeeting = Math.min(60, Math.round(15 + c * 12 + s * 4));
+      const hypotheticalMeeting = (() => {
+        switch (complexity) {
+          case 'highly_complex':
+            return 80;
+          case 'complex':
+            return 60;
+          case 'moderate':
+            return 45;
+          case 'simple':
+          default:
+            return 30;
+        }
+      })();
       time_saved_minutes = hypotheticalMeeting;
     } else {
       time_saved_minutes = 0;
     }
 
-    // confidence score: based on margin between top two and absolute top
+    // confidence score: bucketed by gap between top two options
     const topVal = Math.max(meetingPct, emailPct, asyncPct);
-    const secondVal = [meetingPct, emailPct, asyncPct].sort((a,b) => b-a)[1];
-    const margin = topVal - secondVal;
-    let confidence_score = Math.round(Math.min(100, Math.max(10, 20 + margin * 0.8 + topVal * 0.2)));
+    const sortedScores = [meetingPct, emailPct, asyncPct].sort((a, b) => b - a);
+    const secondVal = sortedScores[1] ?? 0;
+    const gap = topVal - secondVal;
+    let confidence_score: number;
+    if (gap > 30) {
+      confidence_score = 95;
+    } else if (gap > 20) {
+      confidence_score = 85;
+    } else if (gap > 10) {
+      confidence_score = 75;
+    } else if (gap > 5) {
+      confidence_score = 65;
+    } else {
+      confidence_score = 55;
+    }
 
     // rationale and best_practices are deterministic strings built from inputs
     const rationale = `Scores -> meeting: ${meetingPct.toFixed(1)}, email: ${emailPct.toFixed(1)}, async: ${asyncPct.toFixed(1)}. Key drivers: urgency=${urgency}, complexity=${complexity}, decisionTypes=[${decisionTypes.join(',')}], stakeholders=${stakeholderCount}, crossTeam=${crossTeamDependencies}, emotionalRisk=${emotionalRisk}, changeImpact=${changeImpact}.`;
@@ -235,7 +313,7 @@ export default class RulesEngine {
       }
       if (emotionalRisk === 'high') pts.push('Prepare a mitigation plan for emotional risk and allow private feedback channels.');
       if (crossTeamDependencies) pts.push('Document dependencies and owners in a visible place (e.g., shared doc).');
-      return pts.join(' ');
+      return pts.join('\n');
     })();
 
     return {
