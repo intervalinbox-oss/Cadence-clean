@@ -3,6 +3,9 @@ import dynamic from "next/dynamic";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+// Prevent static prerender so Firebase SDK is never loaded during build (avoids auth/invalid-api-key)
+export const dynamic = "force-dynamic";
+
 const AppShell = dynamic(() => import("./AppShell"), {
   ssr: false,
   loading: () => (
