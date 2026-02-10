@@ -1,8 +1,19 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import TopNav from "./components/TopNav";
-import AuthProvider from "./providers/AuthProvider";
+
+const AppShell = dynamic(() => import("./AppShell"), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="h-16 border-b border-border bg-surface flex items-center px-4">
+        <span className="font-semibold text-lg text-foreground">Cadence</span>
+      </header>
+      <main className="min-h-[calc(100vh-4rem)] flex-1">{null}</main>
+    </div>
+  ),
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,12 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background`}>
-        <AuthProvider>
-          <TopNav />
-          <main className="min-h-[calc(100vh-4rem)]">
-            {children}
-          </main>
-        </AuthProvider>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );
