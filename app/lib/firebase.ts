@@ -1,6 +1,6 @@
 /**
- * Firebase is loaded only in the browser (via require inside ensureInitialized).
- * No top-level imports from "firebase/*" so the SDK is never evaluated during SSR/prerender.
+ * Firebase is initialized only in the browser so the SDK is never run during SSR/prerender.
+ * On the client we export real Auth/Firestore; on the server we export stubs that throw if used.
  */
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "",
@@ -11,22 +11,15 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? "",
 };
 
-let _auth: unknown = null;
-let _db: unknown = null;
+let _auth: import("firebase/auth").Auth | null = null;
+let _db: import("firebase/firestore").Firestore | null = null;
 
-function ensureInitialized(): void {
-  if (_auth != null && _db != null) return;
-  if (typeof window === "undefined") {
-    throw new Error(
-      "Firebase is only initialized in the browser. Set NEXT_PUBLIC_FIREBASE_* env vars and ensure the app runs on the client."
-    );
-  }
-  if (!firebaseConfig.apiKey?.trim()) {
-    throw new Error(
-      "Firebase is not configured. Set NEXT_PUBLIC_FIREBASE_API_KEY and other NEXT_PUBLIC_FIREBASE_* environment variables in Vercel (or .env.local)."
-    );
-  }
-  // Load Firebase only on the client so SSR/prerender never evaluates the SDK
+// Debug: in browser console you should see this; if apiKeyLen is 0, env vars weren't in the build
+if (typeof window !== "undefined") {
+  console.log("[Cadence] Firebase env in client: apiKeyLen=" + (firebaseConfig.apiKey?.length ?? 0) + " projectId=" + (firebaseConfig.projectId || "(empty)"));
+}
+
+if (typeof window !== "undefined" && firebaseConfig.apiKey?.trim()) {
   const { initializeApp } = require("firebase/app");
   const { getAuth } = require("firebase/auth");
   const { getFirestore } = require("firebase/firestore");
@@ -35,24 +28,18 @@ function ensureInitialized(): void {
   _db = getFirestore(app);
 }
 
-const authProxy = new Proxy(
-  {},
-  {
-    get(_, prop) {
-      ensureInitialized();
-      return (_auth as Record<string, unknown>)[prop as string];
-    },
-  }
-);
-const dbProxy = new Proxy(
-  {},
-  {
-    get(_, prop) {
-      ensureInitialized();
-      return (_db as Record<string, unknown>)[prop as string];
-    },
-  }
-);
+const stubMessage =
+  "Firebase is not available. Set NEXT_PUBLIC_FIREBASE_* env vars and run in the browser.";
+const authStub = new Proxy({} as import("firebase/auth").Auth, {
+  get() {
+    throw new Error(stubMessage);
+  },
+});
+const dbStub = new Proxy({} as import("firebase/firestore").Firestore, {
+  get() {
+    throw new Error(stubMessage);
+  },
+});
 
-export const auth = authProxy as import("firebase/auth").Auth;
-export const db = dbProxy as import("firebase/firestore").Firestore;
+export const auth = _auth ?? authStub;
+export const db = _db ?? dbStub;
