@@ -1,7 +1,20 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { initializeFirebaseFromConfig } from "@/app/lib/firebase";
+
+const LazyAppContent = React.lazy(() => import("@/app/AppContent"));
+
+const loadingUI = (
+  <div className="min-h-screen bg-background flex flex-col">
+    <header className="h-16 border-b border-border bg-surface flex items-center px-4">
+      <span className="font-semibold text-lg text-foreground">Cadence</span>
+    </header>
+    <main className="min-h-[calc(100vh-4rem)] flex-1 flex items-center justify-center">
+      <p className="text-foreground-muted">Loading…</p>
+    </main>
+  </div>
+);
 
 export default function FirebaseConfigProvider({
   children,
@@ -53,17 +66,12 @@ export default function FirebaseConfigProvider({
   }
 
   if (!ready) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <header className="h-16 border-b border-border bg-surface flex items-center px-4">
-          <span className="font-semibold text-lg text-foreground">Cadence</span>
-        </header>
-        <main className="min-h-[calc(100vh-4rem)] flex-1 flex items-center justify-center">
-          <p className="text-foreground-muted">Loading…</p>
-        </main>
-      </div>
-    );
+    return loadingUI;
   }
 
-  return <>{children}</>;
+  return (
+    <Suspense fallback={loadingUI}>
+      <LazyAppContent>{children}</LazyAppContent>
+    </Suspense>
+  );
 }
