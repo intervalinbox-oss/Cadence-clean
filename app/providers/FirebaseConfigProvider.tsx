@@ -27,6 +27,22 @@ export default function FirebaseConfigProvider({
 
   useEffect(() => {
     let cancelled = false;
+
+    const buildTimeConfig = {
+      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "",
+      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? "",
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "",
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? "",
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? "",
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? "",
+    };
+
+    if (buildTimeConfig.apiKey?.trim() && buildTimeConfig.projectId?.trim()) {
+      initializeFirebaseFromConfig(buildTimeConfig);
+      setReady(true);
+      return;
+    }
+
     (async () => {
       try {
         const res = await fetch("/api/firebase-config");
@@ -39,7 +55,7 @@ export default function FirebaseConfigProvider({
         }
         const config = await res.json();
         initializeFirebaseFromConfig(config);
-        setReady(true);
+        if (!cancelled) setReady(true);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load Firebase config");
       }
