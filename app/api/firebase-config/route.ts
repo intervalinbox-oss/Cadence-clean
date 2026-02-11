@@ -13,9 +13,21 @@ export async function GET() {
   const messagingSenderId = process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? "";
   const appId = process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? "";
 
-  if (!apiKey?.trim() || !projectId?.trim()) {
+  const missing: string[] = [];
+  if (!apiKey?.trim()) missing.push("NEXT_PUBLIC_FIREBASE_API_KEY");
+  if (!projectId?.trim()) missing.push("NEXT_PUBLIC_FIREBASE_PROJECT_ID");
+  if (missing.length > 0) {
+    // Diagnostic: which Firebase env keys exist at runtime (names only)
+    const present = Object.keys(process.env).filter(
+      (k) => k.startsWith("NEXT_PUBLIC_FIREBASE_")
+    );
     return NextResponse.json(
-      { error: "Firebase config not configured on server" },
+      {
+        error: "Firebase config not configured on server",
+        missing,
+        present,
+        hint: "In Vercel, set each variable for Production (and Preview). Ensure 'Runtime' is checked so API routes see them. Then redeploy.",
+      },
       { status: 503 }
     );
   }

@@ -23,6 +23,7 @@ export default function FirebaseConfigProvider({
 }) {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorDetail, setErrorDetail] = useState<{ missing?: string[]; present?: string[]; hint?: string }>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -32,7 +33,8 @@ export default function FirebaseConfigProvider({
         if (cancelled) return;
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          setError(data.error || "Firebase config not available. Set NEXT_PUBLIC_FIREBASE_* in Vercel → Project → Settings → Environment Variables, then redeploy.");
+          setError(data.error || "Firebase config not available.");
+          setErrorDetail({ missing: data.missing, present: data.present, hint: data.hint });
           return;
         }
         const config = await res.json();
@@ -53,6 +55,19 @@ export default function FirebaseConfigProvider({
         <div className="max-w-md text-center space-y-4">
           <h1 className="text-xl font-semibold text-foreground">Configuration needed</h1>
           <p className="text-sm text-foreground-muted">{error}</p>
+          {errorDetail.missing?.length ? (
+            <p className="text-xs text-foreground-muted font-mono text-left break-all">
+              Missing: {errorDetail.missing.join(", ")}
+            </p>
+          ) : null}
+          {errorDetail.present?.length !== undefined ? (
+            <p className="text-xs text-foreground-muted font-mono text-left break-all">
+              Present at runtime: {errorDetail.present.length ? errorDetail.present.join(", ") : "none"}
+            </p>
+          ) : null}
+          {errorDetail.hint ? (
+            <p className="text-sm text-foreground-muted">{errorDetail.hint}</p>
+          ) : null}
           <button
             type="button"
             onClick={() => window.location.reload()}
