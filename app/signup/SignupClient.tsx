@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { auth } from "@/app/lib/firebase";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -16,6 +16,7 @@ export default function SignupClient() {
   const [validation, setValidation] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const googleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams?.get("next") || "/dashboard";
@@ -36,6 +37,12 @@ export default function SignupClient() {
       })
       .catch(() => {});
   }, [router, next]);
+
+  useEffect(() => {
+    return () => {
+      if (googleTimeoutRef.current) clearTimeout(googleTimeoutRef.current);
+    };
+  }, []);
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
@@ -82,15 +89,30 @@ export default function SignupClient() {
     setError(null);
     setValidation(null);
     setGoogleLoading(true);
-    
+
+    googleTimeoutRef.current = setTimeout(() => {
+      setGoogleLoading(false);
+      setError(
+        "Sign-in did not redirect. Add this site's domain in Firebase Console → Authentication → Settings → Authorized domains, then try again."
+      );
+      googleTimeoutRef.current = null;
+    }, 4000);
+
     try {
       const provider = new GoogleAuthProvider();
       await signInWithRedirect(auth, provider);
     } catch (err: any) {
+      if (googleTimeoutRef.current) {
+        clearTimeout(googleTimeoutRef.current);
+        googleTimeoutRef.current = null;
+      }
       const errorCode = err.code;
       let errorMessage = "Google sign-in failed.";
       
-      if (errorCode === "auth/popup-blocked") {
+      if (errorCode === "auth/unauthorized-domain") {
+        errorMessage =
+          "This domain is not authorized. Add it in Firebase Console → Authentication → Settings → Authorized domains.";
+      } else if (errorCode === "auth/popup-blocked") {
         errorMessage = "Sign-in was blocked. Please try again.";
       } else if (errorCode === "auth/invalid-credential") {
         errorMessage = "Google sign-in is not properly configured. Please contact support or use email/password sign up.";
@@ -100,6 +122,10 @@ export default function SignupClient() {
       
       setError(errorMessage);
     } finally {
+      if (googleTimeoutRef.current) {
+        clearTimeout(googleTimeoutRef.current);
+        googleTimeoutRef.current = null;
+      }
       setGoogleLoading(false);
     }
   }
@@ -143,12 +169,6 @@ export default function SignupClient() {
               </p>
             )}
 
-            {error && (
-              <p className="text-sm text-error" role="alert">
-                {error}
-              </p>
-            )}
-
             <Button
               type="submit"
               variant="primary"
@@ -167,6 +187,12 @@ export default function SignupClient() {
               <span className="px-2 bg-card text-foreground-muted">Or continue with</span>
             </div>
           </div>
+
+          {error && (
+            <p className="text-sm text-error text-center -mt-2" role="alert">
+              {error}
+            </p>
+          )}
 
           <Button
             type="button"

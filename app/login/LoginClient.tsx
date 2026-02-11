@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { auth } from "@/app/lib/firebase";
 import {
   signInWithEmailAndPassword,
@@ -23,6 +23,7 @@ export default function LoginClient() {
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const googleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams?.get("next") || "/";
@@ -43,6 +44,12 @@ export default function LoginClient() {
       })
       .catch(() => {});
   }, [router, next]);
+
+  useEffect(() => {
+    return () => {
+      if (googleTimeoutRef.current) clearTimeout(googleTimeoutRef.current);
+    };
+  }, []);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -91,14 +98,29 @@ export default function LoginClient() {
     setResetEmailSent(false);
     setGoogleLoading(true);
     
+    googleTimeoutRef.current = setTimeout(() => {
+      setGoogleLoading(false);
+      setError(
+        "Sign-in did not redirect. Add this site's domain in Firebase Console → Authentication → Settings → Authorized domains, then try again."
+      );
+      googleTimeoutRef.current = null;
+    }, 4000);
+
     try {
       const provider = new GoogleAuthProvider();
       await signInWithRedirect(auth, provider);
     } catch (err: any) {
+      if (googleTimeoutRef.current) {
+        clearTimeout(googleTimeoutRef.current);
+        googleTimeoutRef.current = null;
+      }
       const errorCode = err.code;
       let errorMessage = "Google sign-in failed.";
       
-      if (errorCode === "auth/popup-blocked") {
+      if (errorCode === "auth/unauthorized-domain") {
+        errorMessage =
+          "This domain is not authorized. Add it in Firebase Console → Authentication → Settings → Authorized domains.";
+      } else if (errorCode === "auth/popup-blocked") {
         errorMessage = "Sign-in was blocked. Please try again.";
       } else if (errorCode === "auth/invalid-credential") {
         errorMessage = "Google sign-in is not properly configured. Please contact support or use email/password login.";
@@ -110,6 +132,10 @@ export default function LoginClient() {
       
       setError(errorMessage);
     } finally {
+      if (googleTimeoutRef.current) {
+        clearTimeout(googleTimeoutRef.current);
+        googleTimeoutRef.current = null;
+      }
       setGoogleLoading(false);
     }
   }
