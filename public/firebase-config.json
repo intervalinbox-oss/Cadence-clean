@@ -1,8 +1,8 @@
 {
-  "apiKey": "your-api-key",
-  "authDomain": "your-project.firebaseapp.com",
-  "projectId": "your-project-id",
-  "storageBucket": "your-project.appspot.com",
-  "messagingSenderId": "123456789",
-  "appId": "1:123456789:web:abc123"
+  "apiKey": "AIzaSyDQpJYy66jpTx1bImBaW_7VfIKzz2_2fX0",
+  "authDomain": "cadence-956b5.firebaseapp.com",
+  "projectId": "cadence-956b5",
+  "storageBucket": "cadence-956b5.firebasestorage.app",
+  "messagingSenderId": "632672895068",
+  "appId": "1:632672895068:web:9c7f835c17aaaf2f402699"
 }
