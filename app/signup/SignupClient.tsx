@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { auth } from "@/app/lib/firebase";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -26,6 +26,16 @@ export default function SignupClient() {
       router.push(next);
     }
   }, [authLoading, user, router, next]);
+
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          router.push(next);
+        }
+      })
+      .catch(() => {});
+  }, [router, next]);
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
@@ -75,16 +85,13 @@ export default function SignupClient() {
     
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      router.push(next);
+      await signInWithRedirect(auth, provider);
     } catch (err: any) {
       const errorCode = err.code;
       let errorMessage = "Google sign-in failed.";
       
-      if (errorCode === "auth/popup-closed-by-user") {
-        errorMessage = "Sign-in popup was closed. Please try again.";
-      } else if (errorCode === "auth/popup-blocked") {
-        errorMessage = "Popup was blocked by your browser. Please allow popups and try again.";
+      if (errorCode === "auth/popup-blocked") {
+        errorMessage = "Sign-in was blocked. Please try again.";
       } else if (errorCode === "auth/invalid-credential") {
         errorMessage = "Google sign-in is not properly configured. Please contact support or use email/password sign up.";
       } else if (err.message) {
