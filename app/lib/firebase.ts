@@ -19,13 +19,13 @@ const stubMessage =
 
 const authProxy = new Proxy({} as import("firebase/auth").Auth, {
   get(_, prop) {
-    if (_auth != null) return (_auth as Record<string, unknown>)[prop as string];
+    if (_auth != null) return (_auth as unknown as Record<string, unknown>)[prop as string];
     throw new Error(stubMessage);
   },
 });
 const dbProxy = new Proxy({} as import("firebase/firestore").Firestore, {
   get(_, prop) {
-    if (_db != null) return (_db as Record<string, unknown>)[prop as string];
+    if (_db != null) return (_db as unknown as Record<string, unknown>)[prop as string];
     throw new Error(stubMessage);
   },
 });
