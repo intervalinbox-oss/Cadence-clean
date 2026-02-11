@@ -23,7 +23,7 @@ export default function FirebaseConfigProvider({
 }) {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [errorDetail, setErrorDetail] = useState<{ missing?: string[]; present?: string[]; hint?: string }>({});
+  const [errorDetail, setErrorDetail] = useState<{ missing?: string[]; present?: string[]; hint?: string; buildHadConfig?: boolean }>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -45,12 +45,27 @@ export default function FirebaseConfigProvider({
 
     (async () => {
       try {
+        const staticRes = await fetch("/firebase-config.json");
+        if (cancelled) return;
+        if (staticRes.ok) {
+          const config = await staticRes.json();
+          if (config?.apiKey?.trim() && config?.projectId?.trim()) {
+            initializeFirebaseFromConfig(config);
+            if (!cancelled) setReady(true);
+            return;
+          }
+        }
         const res = await fetch("/api/firebase-config");
         if (cancelled) return;
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           setError(data.error || "Firebase config not available.");
-          setErrorDetail({ missing: data.missing, present: data.present, hint: data.hint });
+          setErrorDetail({
+            missing: data.missing,
+            present: data.present,
+            hint: data.hint,
+            buildHadConfig: false,
+          });
           return;
         }
         const config = await res.json();
@@ -81,9 +96,17 @@ export default function FirebaseConfigProvider({
               Present at runtime: {errorDetail.present.length ? errorDetail.present.join(", ") : "none"}
             </p>
           ) : null}
+          {errorDetail.buildHadConfig === false ? (
+            <p className="text-xs text-foreground-muted">
+              Build had no config: NEXT_PUBLIC_FIREBASE_* were not inlined at build time. In Vercel, ensure the variables exist for this project and are enabled for the environment that builds (e.g. Production). Redeploy after adding or changing them.
+            </p>
+          ) : null}
           {errorDetail.hint ? (
             <p className="text-sm text-foreground-muted">{errorDetail.hint}</p>
           ) : null}
+          <p className="text-sm text-foreground-muted border-t border-border pt-3 mt-2">
+            Or add <code className="font-mono text-xs bg-surface px-1 rounded">public/firebase-config.json</code> (copy from <code className="font-mono text-xs bg-surface px-1 rounded">firebase-config.example.json</code>) with your Firebase web app config, commit and redeploy.
+          </p>
           <button
             type="button"
             onClick={() => window.location.reload()}
