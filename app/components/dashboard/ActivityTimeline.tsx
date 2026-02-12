@@ -28,7 +28,7 @@ export default function ActivityTimeline({ decisions }: ActivityTimelineProps) {
             Your decision history will appear here. Start making decisions to track your communication patterns and time savings.
           </p>
           <Link
-            href="/new-decision-v2"
+            href="/new-decision"
             className="inline-flex items-center gap-2 px-4 py-2 bg-accent-blue text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

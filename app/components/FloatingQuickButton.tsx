@@ -11,7 +11,7 @@ export default function FloatingQuickButton() {
 
   return (
     <Link
-      href="/new-decision-v2"
+      href="/new-decision"
       className="fixed bottom-6 right-6 z-50 rounded-full bg-accent-blue text-white p-4 shadow-lg hover:scale-110 transition-transform hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-accent-blue focus:ring-offset-2"
       aria-label="Start a quick decision"
     >

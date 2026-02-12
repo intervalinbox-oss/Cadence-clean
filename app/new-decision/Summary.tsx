@@ -98,7 +98,7 @@ export default function Summary({ data, onBack }: SummaryProps) {
         body: JSON.stringify({
           id: `log_${Date.now()}_frontend_timeline`,
           timestamp: Date.now(),
-          location: "app/new-decision-v2/Summary.tsx:handleSave",
+          location: "app/new-decision/Summary.tsx:handleSave",
           message: "decisionData timeline vs time_sensitivity before saveDecision",
           runId: "pre-fix",
           hypothesisId: "H1",

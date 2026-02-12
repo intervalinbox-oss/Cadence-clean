@@ -4,6 +4,17 @@ const FUNCTIONS_URL = process.env.NEXT_PUBLIC_FIREBASE_FUNCTIONS_URL || "";
 const FIREBASE_API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "";
 const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET || "";
 
+function getAuthFromRequest(req: NextRequest): { auth: string | null; rawToken: string | null } {
+  const auth =
+    req.headers.get("Authorization") ||
+    (() => {
+      const t = req.headers.get("X-Firebase-ID-Token");
+      return t ? `Bearer ${t}` : null;
+    })();
+  const rawToken = req.headers.get("X-Firebase-ID-Token") ?? (auth ? auth.replace(/^Bearer\s+/i, "").trim() : null);
+  return { auth, rawToken };
+}
+
 async function verifyTokenAndGetUid(idToken: string): Promise<string | null> {
   if (!FIREBASE_API_KEY) return null;
   try {
@@ -24,7 +35,7 @@ async function verifyTokenAndGetUid(idToken: string): Promise<string | null> {
 }
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
@@ -35,13 +46,7 @@ export async function GET(
       { status: 500 }
     );
   }
-  const auth =
-    _request.headers.get("Authorization") ||
-    (() => {
-      const t = _request.headers.get("X-Firebase-ID-Token");
-      return t ? `Bearer ${t}` : null;
-    })();
-  const rawToken = _request.headers.get("X-Firebase-ID-Token") ?? (auth ? auth.replace(/^Bearer\s+/i, "").trim() : null);
+  const { auth, rawToken } = getAuthFromRequest(request);
   const baseUrl = `${FUNCTIONS_URL.replace(/\/$/, "")}/${pathStr}`;
   const useInternalAuth =
     (pathStr === "dashboard" || pathStr === "dashboard/insights") &&
@@ -97,13 +102,7 @@ export async function POST(
       { status: 500 }
     );
   }
-  const auth =
-    request.headers.get("Authorization") ||
-    (() => {
-      const t = request.headers.get("X-Firebase-ID-Token");
-      return t ? `Bearer ${t}` : null;
-    })();
-  const rawToken = request.headers.get("X-Firebase-ID-Token") ?? (auth ? auth.replace(/^Bearer\s+/i, "").trim() : null);
+  const { auth, rawToken } = getAuthFromRequest(request);
   const baseUrl = `${FUNCTIONS_URL.replace(/\/$/, "")}/${pathStr}`;
   const backendUrl = rawToken ? `${baseUrl}?firebase_id_token=${encodeURIComponent(rawToken)}` : baseUrl;
   const body = await request.text();

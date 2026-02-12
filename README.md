@@ -58,21 +58,7 @@ An AI-powered communication decision support system that recommends the optimal 
 
 ### Deployment
 
-#### Frontend (Vercel)
-
-1. Connect your GitHub repository to Vercel
-2. Add environment variables in Vercel dashboard
-3. Deploy automatically on push to main
-
-#### Backend (Firebase Functions)
-
-1. Deploy functions:
-   ```bash
-   cd functions
-   firebase deploy --only functions
-   ```
-
-2. Update `NEXT_PUBLIC_FIREBASE_FUNCTIONS_URL` in Vercel with your deployed function URL
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the full deployment guide, including Firebase config, Auth setup, and Vercel deployment.
 
 ## Project Structure
 
@@ -82,7 +68,7 @@ An AI-powered communication decision support system that recommends the optimal 
     /ui              # Reusable UI components
     /dashboard       # Dashboard-specific components
     /charts          # Chart components
-  /new-decision-v2   # Decision wizard (Quick Mode & Full Wizard)
+  /new-decision   # Decision wizard (Quick Mode & Full Wizard)
   /dashboard         # Analytics dashboard
   /history           # Decision history
   /decision/[id]     # Decision detail page

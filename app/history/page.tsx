@@ -149,7 +149,7 @@ export default function HistoryPage() {
               Review your past communication recommendations
             </p>
           </div>
-          <Link href="/new-decision-v2">
+          <Link href="/new-decision">
             <Button variant="primary">+ Find Your Cadence</Button>
           </Link>
         </div>
@@ -241,7 +241,7 @@ export default function HistoryPage() {
                   : "No decisions match your filters."}
               </p>
               {decisions.length === 0 && (
-                <Link href="/new-decision-v2">
+                <Link href="/new-decision">
                   <Button variant="primary">Create Your First Decision</Button>
                 </Link>
               )}

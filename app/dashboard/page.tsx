@@ -10,14 +10,14 @@ import InsightsList from "@/app/components/dashboard/InsightsList";
 import ActivityTimeline from "@/app/components/dashboard/ActivityTimeline";
 import Card from "@/app/components/ui/Card";
 
+type DashboardError = { type: "config" } | { type: "index"; indexUrl: string } | { type: "unreachable" } | null;
+
 export default function DashboardPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [insights, setInsights] = useState<string[]>([]);
-  const [apiConfigError, setApiConfigError] = useState(false);
-  const [apiUnreachableError, setApiUnreachableError] = useState(false);
-  const [firestoreIndexUrl, setFirestoreIndexUrl] = useState<string | null>(null);
+  const [error, setError] = useState<DashboardError>(null);
 
   useEffect(() => {
     if (user) {
@@ -35,50 +35,42 @@ export default function DashboardPage() {
 
       setDashboardData(dashboard);
       setInsights((insightsData as { insights?: string[] }).insights || []);
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      const errWithIndex = error as Error & { indexUrl?: string };
+      setError(null);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const errWithIndex = err as Error & { indexUrl?: string };
       if (msg.includes("API base URL is not configured")) {
-        setApiConfigError(true);
+        setError({ type: "config" });
       } else if (msg.includes("requires an index") || msg.includes("Failed to fetch dashboard data") || msg.includes("Failed to generate insights")) {
-        setFirestoreIndexUrl(errWithIndex.indexUrl || "https://console.firebase.google.com/project/cadence-956b5/firestore/indexes");
-      } else if (
-        msg.includes("Could not reach the API") ||
-        msg.includes("Could not reach Firebase Functions") ||
-        msg.includes("Failed to fetch")
-      ) {
-        setApiUnreachableError(true);
+        setError({ type: "index", indexUrl: errWithIndex.indexUrl || "https://console.firebase.google.com/project/cadence-956b5/firestore/indexes" });
+      } else if (msg.includes("Could not reach the API") || msg.includes("Could not reach Firebase Functions") || msg.includes("Failed to fetch")) {
+        setError({ type: "unreachable" });
       }
-      console.error("Failed to load dashboard:", error);
+      console.error("Failed to load dashboard:", err);
     } finally {
       setLoading(false);
     }
   }
 
-  if (loading) {
-    return (
-      <ProtectedRoute>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center py-12">
-            <p className="text-foreground-muted">Loading dashboard...</p>
-          </div>
-        </div>
-      </ProtectedRoute>
-    );
-  }
+  const hasError = error !== null;
+  const showContent = dashboardData && !hasError;
 
   return (
     <ProtectedRoute>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Section 1: Header */}
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
             Communication + Time Saved
           </h1>
         </div>
 
-        {/* API not configured: show setup instructions instead of empty state */}
-        {apiConfigError && (
+        {loading && (
+          <div className="text-center py-12">
+            <p className="text-foreground-muted">Loading dashboard...</p>
+          </div>
+        )}
+
+        {error?.type === "config" && (
           <Card size="large">
             <h2 className="text-xl font-semibold text-foreground mb-2">API not configured</h2>
             <p className="text-foreground-muted mb-4">
@@ -93,15 +85,14 @@ export default function DashboardPage() {
           </Card>
         )}
 
-        {/* Firestore index required */}
-        {firestoreIndexUrl && (
+        {error?.type === "index" && (
           <Card size="large">
             <h2 className="text-xl font-semibold text-foreground mb-2">Firestore index required</h2>
             <p className="text-foreground-muted mb-4">
               The dashboard query needs a Firestore index. Create it once, then reload.
             </p>
             <p className="mb-4">
-              <a href={firestoreIndexUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">
+              <a href={error.indexUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">
                 Create the index in Firebase Console →
               </a>
             </p>
@@ -111,8 +102,7 @@ export default function DashboardPage() {
           </Card>
         )}
 
-        {/* API unreachable: network / deploy / CORS */}
-        {apiUnreachableError && !firestoreIndexUrl && (
+        {error?.type === "unreachable" && (
           <Card size="large">
             <h2 className="text-xl font-semibold text-foreground mb-2">Could not reach the API</h2>
             <p className="text-foreground-muted mb-4">
@@ -129,8 +119,7 @@ export default function DashboardPage() {
           </Card>
         )}
 
-        {/* Section 2: Summary Metrics Grid */}
-        {dashboardData && !apiConfigError && !apiUnreachableError && !firestoreIndexUrl && (
+        {showContent && (
           <MetricsGrid
             totalDecisions={dashboardData.totalDecisions || 0}
             timeSavedTotal={dashboardData.timeSavedTotal || 0}
@@ -139,16 +128,14 @@ export default function DashboardPage() {
           />
         )}
 
-        {/* Section 3: Communication Breakdown */}
-        {dashboardData && !apiConfigError && !apiUnreachableError && !firestoreIndexUrl && (
+        {showContent && (
           <CommunicationBreakdownChart
             communicationBreakdown={dashboardData.communicationBreakdown || {}}
             title="How You're Communicating"
           />
         )}
 
-        {/* Section 5: Communication patterns (de-emphasized) */}
-        {!apiConfigError && !apiUnreachableError && !firestoreIndexUrl && dashboardData && (dashboardData.urgencyDistribution || dashboardData.toneDistribution || dashboardData.sensitivityDistribution) && (
+        {showContent && (dashboardData.urgencyDistribution || dashboardData.toneDistribution || dashboardData.sensitivityDistribution) && (
           <Card size="large">
             <h3 className="text-lg font-semibold text-foreground mb-4">Communication Patterns</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -195,16 +182,14 @@ export default function DashboardPage() {
           </Card>
         )}
 
-        {/* Section 6: Behavioral Insights (time saved + how you communicate) */}
-        {!apiConfigError && !apiUnreachableError && !firestoreIndexUrl && (() => {
+        {!hasError && (() => {
           const filteredInsights = (insights || []).filter(
             (s) => /saved|hour|intentional|avoided|choosing|recommended/i.test(s)
           );
           return filteredInsights.length > 0 ? <InsightsList insights={filteredInsights} /> : null;
         })()}
 
-        {/* Section 7: Activity Timeline */}
-        {dashboardData && !apiConfigError && !apiUnreachableError && !firestoreIndexUrl && (
+        {showContent && (
           <ActivityTimeline decisions={dashboardData.decisions || []} />
         )}
       </div>

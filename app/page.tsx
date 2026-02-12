@@ -91,7 +91,7 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
             <Link
-              href="/new-decision-v2"
+              href="/new-decision"
               className="inline-flex items-center gap-2 rounded-lg gradient-accent text-white font-medium px-6 py-3 hover:opacity-90 transition-opacity"
             >
               <SparkleIcon className="w-4 h-4" />
@@ -223,7 +223,7 @@ export default function Home() {
             <h2 className="text-xl sm:text-2xl font-bold mb-2">Ready to transform your communication?</h2>
             <p className="text-white/90 text-sm sm:text-base mb-6">Join leaders who make smarter decisions every day.</p>
             <Link
-              href="/new-decision-v2"
+              href="/new-decision"
               className="inline-flex items-center gap-2 rounded-lg bg-white text-foreground font-semibold px-6 py-3 hover:bg-surface transition-colors"
             >
               <SparkleIcon className="w-4 h-4" />

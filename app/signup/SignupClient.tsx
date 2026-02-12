@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "firebase/auth";
+import { useEffect, useState } from "react";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/app/lib/firebase";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/providers/AuthProvider";
+import { useGoogleSignIn } from "@/app/hooks/useGoogleSignIn";
 import Input from "@/app/components/ui/Input";
 import Button from "@/app/components/ui/Button";
 
@@ -15,34 +16,22 @@ export default function SignupClient() {
   const [error, setError] = useState<string | null>(null);
   const [validation, setValidation] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const googleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams?.get("next") || "/dashboard";
   const { user, loading: authLoading } = useAuth();
+  const { handleGoogle, googleLoading } = useGoogleSignIn({
+    router,
+    next,
+    setError,
+    onClear: () => setValidation(null),
+  });
 
   useEffect(() => {
     if (!authLoading && user) {
       router.push(next);
     }
   }, [authLoading, user, router, next]);
-
-  useEffect(() => {
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result?.user) {
-          router.push(next);
-        }
-      })
-      .catch(() => {});
-  }, [router, next]);
-
-  useEffect(() => {
-    return () => {
-      if (googleTimeoutRef.current) clearTimeout(googleTimeoutRef.current);
-    };
-  }, []);
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
@@ -82,51 +71,6 @@ export default function SignupClient() {
       setError(errorMessage);
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleGoogle() {
-    setError(null);
-    setValidation(null);
-    setGoogleLoading(true);
-
-    googleTimeoutRef.current = setTimeout(() => {
-      setGoogleLoading(false);
-      setError(
-        "Sign-in did not redirect. Add this site's domain in Firebase Console → Authentication → Settings → Authorized domains, then try again."
-      );
-      googleTimeoutRef.current = null;
-    }, 4000);
-
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithRedirect(auth, provider);
-    } catch (err: any) {
-      if (googleTimeoutRef.current) {
-        clearTimeout(googleTimeoutRef.current);
-        googleTimeoutRef.current = null;
-      }
-      const errorCode = err.code;
-      let errorMessage = "Google sign-in failed.";
-      
-      if (errorCode === "auth/unauthorized-domain") {
-        errorMessage =
-          "This domain is not authorized. Add it in Firebase Console → Authentication → Settings → Authorized domains.";
-      } else if (errorCode === "auth/popup-blocked") {
-        errorMessage = "Sign-in was blocked. Please try again.";
-      } else if (errorCode === "auth/invalid-credential") {
-        errorMessage = "Google sign-in is not properly configured. Please contact support or use email/password sign up.";
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-      
-      setError(errorMessage);
-    } finally {
-      if (googleTimeoutRef.current) {
-        clearTimeout(googleTimeoutRef.current);
-        googleTimeoutRef.current = null;
-      }
-      setGoogleLoading(false);
     }
   }
 
