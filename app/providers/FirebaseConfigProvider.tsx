@@ -44,7 +44,7 @@ export default function FirebaseConfigProvider({
 
     (async () => {
       try {
-        const res = await fetch("/firebase-config.json");
+        const res = await fetch("/firebase-config.json", { cache: "no-store" });
         if (cancelled) return;
         if (!res.ok) {
           setError("Firebase config not found.");

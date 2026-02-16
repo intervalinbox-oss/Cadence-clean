@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { auth } from "@/app/lib/firebase";
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import {
+  signInWithRetry,
+  sendPasswordResetWithRetry,
+  getAuthErrorMessage,
+} from "@/app/lib/authHelpers";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/providers/AuthProvider";
@@ -42,27 +46,12 @@ export default function LoginClient() {
 
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
+      await signInWithRetry(auth, email.trim(), password);
       router.push(next);
-    } catch (err: any) {
-      const errorCode = err.code;
-      let errorMessage = "Login failed. Please try again.";
-      
-      if (errorCode === "auth/user-not-found") {
-        errorMessage = "No account found with this email address.";
-      } else if (errorCode === "auth/wrong-password") {
-        errorMessage = "Incorrect password. Try again or reset your password.";
-      } else if (errorCode === "auth/invalid-email") {
-        errorMessage = "Invalid email address.";
-      } else if (errorCode === "auth/user-disabled") {
-        errorMessage = "This account has been disabled.";
-      } else if (errorCode === "auth/too-many-requests") {
-        errorMessage = "Too many failed attempts. Please try again later or reset your password.";
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-      
-      setError(errorMessage);
+    } catch (err: unknown) {
+      const errorCode = (err as { code?: string })?.code;
+      const fallback = (err as { message?: string })?.message || "Login failed. Please try again.";
+      setError(getAuthErrorMessage(errorCode, fallback, "login"));
     } finally {
       setLoading(false);
     }
@@ -79,22 +68,13 @@ export default function LoginClient() {
     }
 
     try {
-      await sendPasswordResetEmail(auth, email.trim());
+      await sendPasswordResetWithRetry(auth, email.trim());
       setResetEmailSent(true);
       setError(null);
-    } catch (err: any) {
-      const errorCode = err.code;
-      let errorMessage = "Failed to send reset email.";
-      
-      if (errorCode === "auth/user-not-found") {
-        errorMessage = "No account found with this email address.";
-      } else if (errorCode === "auth/invalid-email") {
-        errorMessage = "Invalid email address.";
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-      
-      setError(errorMessage);
+    } catch (err: unknown) {
+      const errorCode = (err as { code?: string })?.code;
+      const fallback = (err as { message?: string })?.message || "Failed to send reset email.";
+      setError(getAuthErrorMessage(errorCode, fallback, "reset"));
     }
   }
 

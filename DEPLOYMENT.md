@@ -74,7 +74,9 @@ Connect your repo to Vercel; it will auto-deploy on push. Or: `vercel --prod`.
 - [ ] Functions deployed
 - [ ] `NEXT_PUBLIC_FIREBASE_FUNCTIONS_URL` set in Vercel
 - [ ] App domain in Firebase Authorized domains
-- [ ] OAuth origins in Google Cloud
+- [ ] OAuth origins in Google Cloud (if using Google sign-in)
+- [ ] Email/Password sign-in method enabled (Firebase Console → Authentication → Sign-in method)
+- [ ] API key HTTP referrer restrictions include your domain (if using restrictions)
 - [ ] Frontend deployed
 
 ---
@@ -88,3 +90,7 @@ Connect your repo to Vercel; it will auto-deploy on push. Or: `vercel --prod`.
 **Auth / "Configuration needed":** Ensure `public/firebase-config.json` exists and has valid `apiKey` and `projectId`.
 
 **Google sign-in "unauthorized-domain":** Add your exact domain to Firebase Authorized domains and Google Cloud Authorized JavaScript origins.
+
+**Auth "network-request-failed" or "requests-from-referer-are-blocked":** Your Firebase API key may have HTTP referrer restrictions that block your deployment domain. In Google Cloud Console → APIs & Services → Credentials → find your Firebase API key (Browser key) → Application restrictions. Either:
+- Add your app origin(s) to "HTTP referrers", e.g. `https://cadence-indol.vercel.app/*` and `https://*.vercel.app/*` for preview deployments, or
+- Temporarily set to "None" to test (less secure; use referrer restrictions in production).

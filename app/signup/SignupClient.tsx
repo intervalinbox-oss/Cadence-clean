@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/app/lib/firebase";
+import { signUpWithRetry, getAuthErrorMessage } from "@/app/lib/authHelpers";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/providers/AuthProvider";
@@ -43,25 +43,12 @@ export default function SignupClient() {
 
     setLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email.trim(), password);
+      await signUpWithRetry(auth, email.trim(), password);
       router.push(next);
-    } catch (err: any) {
-      const errorCode = err.code;
-      let errorMessage = "Sign up failed. Please try again.";
-      
-      if (errorCode === "auth/email-already-in-use") {
-        errorMessage = "An account with this email already exists. Please sign in instead.";
-      } else if (errorCode === "auth/invalid-email") {
-        errorMessage = "Invalid email address.";
-      } else if (errorCode === "auth/weak-password") {
-        errorMessage = "Password is too weak. Please choose a stronger password.";
-      } else if (errorCode === "auth/operation-not-allowed") {
-        errorMessage = "Email/password accounts are not enabled. Please contact support.";
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-      
-      setError(errorMessage);
+    } catch (err: unknown) {
+      const errorCode = (err as { code?: string })?.code;
+      const fallback = (err as { message?: string })?.message || "Sign up failed. Please try again.";
+      setError(getAuthErrorMessage(errorCode, fallback, "signup"));
     } finally {
       setLoading(false);
     }
