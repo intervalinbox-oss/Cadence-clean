@@ -1,6 +1,6 @@
 /**
- * Auth helpers with retry logic for transient network failures
- * and user-friendly error messages for common Firebase Auth errors.
+ * Auth helpers with retry logic, server-side proxy fallback for network failures,
+ * and user-friendly error messages.
  */
 
 import type { Auth } from "firebase/auth";
@@ -29,8 +29,8 @@ export function getAuthErrorMessage(
 ): string {
   if (errorCode === "auth/network-request-failed") {
     return [
-      "Network error connecting to Firebase. Try again in a moment.",
-      "If this persists: Google Cloud Console → APIs & Services → Credentials → your API key → ensure your app domain (e.g. cadence-indol.vercel.app) is in HTTP referrer restrictions, or temporarily remove restrictions to test.",
+      "Your browser cannot reach Firebase (often caused by ad blockers, firewalls, or VPN).",
+      "Try: disable ad blockers for this site, use incognito mode, or a different network.",
     ].join(" ");
   }
   if (errorCode === "auth/requests-from-referer-are-blocked") {
@@ -85,13 +85,54 @@ async function withRetry<T>(
   throw lastError;
 }
 
+type ProxyResult = { customToken: string } | { error: string; code?: string } | null;
+
+async function signUpViaProxy(email: string, password: string): Promise<ProxyResult> {
+  const res = await fetch("/api/auth/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  const data = (await res.json().catch(() => ({}))) as { customToken?: string; error?: string; code?: string } | null;
+  if (res.ok && data?.customToken) return { customToken: data.customToken };
+  if (data?.error) return { error: data.error, code: data.code };
+  return null;
+}
+
+async function signInViaProxy(email: string, password: string): Promise<ProxyResult> {
+  const res = await fetch("/api/auth/signin", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  const data = (await res.json().catch(() => ({}))) as { customToken?: string; error?: string; code?: string } | null;
+  if (res.ok && data?.customToken) return { customToken: data.customToken };
+  if (data?.error) return { error: data.error, code: data.code };
+  return null;
+}
+
 export async function signUpWithRetry(
   auth: Auth,
   email: string,
   password: string
 ) {
-  const { createUserWithEmailAndPassword } = await import("firebase/auth");
-  return withRetry(() => createUserWithEmailAndPassword(auth, email, password));
+  const { createUserWithEmailAndPassword, signInWithCustomToken } = await import("firebase/auth");
+  try {
+    return await withRetry(() => createUserWithEmailAndPassword(auth, email, password));
+  } catch (err) {
+    if (isNetworkError(err)) {
+      const proxy = await signUpViaProxy(email, password);
+      if (proxy && "customToken" in proxy) {
+        return signInWithCustomToken(auth, proxy.customToken);
+      }
+      if (proxy && "error" in proxy) {
+        const e = new Error(proxy.error) as Error & { code?: string };
+        e.code = proxy.code;
+        throw e;
+      }
+    }
+    throw err;
+  }
 }
 
 export async function signInWithRetry(
@@ -99,8 +140,23 @@ export async function signInWithRetry(
   email: string,
   password: string
 ) {
-  const { signInWithEmailAndPassword } = await import("firebase/auth");
-  return withRetry(() => signInWithEmailAndPassword(auth, email, password));
+  const { signInWithEmailAndPassword, signInWithCustomToken } = await import("firebase/auth");
+  try {
+    return await withRetry(() => signInWithEmailAndPassword(auth, email, password));
+  } catch (err) {
+    if (isNetworkError(err)) {
+      const proxy = await signInViaProxy(email, password);
+      if (proxy && "customToken" in proxy) {
+        return signInWithCustomToken(auth, proxy.customToken);
+      }
+      if (proxy && "error" in proxy) {
+        const e = new Error(proxy.error) as Error & { code?: string };
+        e.code = proxy.code;
+        throw e;
+      }
+    }
+    throw err;
+  }
 }
 
 export async function sendPasswordResetWithRetry(auth: Auth, email: string) {

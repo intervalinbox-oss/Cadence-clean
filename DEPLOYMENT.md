@@ -49,6 +49,7 @@ Note the Function URL (e.g. `https://us-central1-your-project.cloudfunctions.net
 
 **Vercel:** Project Settings → Environment Variables:
 - `NEXT_PUBLIC_FIREBASE_FUNCTIONS_URL` – your deployed function URL
+- `FIREBASE_SERVICE_ACCOUNT_JSON` – (optional) Full JSON of your Firebase service account key. Enables server-side auth proxy, which bypasses client-side network blocking (ad blockers, firewalls). Get from Firebase Console → Project Settings → Service Accounts → Generate new private key. Paste the entire JSON as the value.
 
 ## 6. Firebase Auth (Google Sign-In)
 
@@ -91,6 +92,9 @@ Connect your repo to Vercel; it will auto-deploy on push. Or: `vercel --prod`.
 
 **Google sign-in "unauthorized-domain":** Add your exact domain to Firebase Authorized domains and Google Cloud Authorized JavaScript origins.
 
-**Auth "network-request-failed" or "requests-from-referer-are-blocked":** Your Firebase API key may have HTTP referrer restrictions that block your deployment domain. In Google Cloud Console → APIs & Services → Credentials → find your Firebase API key (Browser key) → Application restrictions. Either:
-- Add your app origin(s) to "HTTP referrers", e.g. `https://cadence-indol.vercel.app/*` and `https://*.vercel.app/*` for preview deployments, or
-- Temporarily set to "None" to test (less secure; use referrer restrictions in production).
+**Auth "network-request-failed":** Often caused by ad blockers blocking `identitytoolkit.googleapis.com`, or firewalls/VPN. Fixes:
+1. **Server-side proxy (recommended):** Add `FIREBASE_SERVICE_ACCOUNT_JSON` to Vercel env (see step 5). The app will automatically use a server-side auth proxy when the client cannot reach Firebase.
+2. **Disable ad blockers** for your app domain.
+3. **Try incognito** or a different network (e.g. mobile hotspot).
+
+**Auth "requests-from-referer-are-blocked":** Add your app domain to API key HTTP referrer restrictions in Google Cloud Console, or set restrictions to "None".
