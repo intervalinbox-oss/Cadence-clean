@@ -53,6 +53,8 @@ export function getAuthErrorMessage(
   if (context === "login") {
     if (errorCode === "auth/user-not-found") return "No account found with this email address.";
     if (errorCode === "auth/wrong-password") return "Incorrect password. Try again or reset your password.";
+    if (errorCode === "auth/invalid-credential" || errorCode === "auth/account-exists-with-different-credential")
+      return "This account was created with Google sign-in. Email/password is not available. Please contact support to recover access.";
     if (errorCode === "auth/invalid-email") return "Invalid email address.";
     if (errorCode === "auth/user-disabled") return "This account has been disabled.";
     if (errorCode === "auth/too-many-requests") return "Too many failed attempts. Please try again later or reset your password.";
@@ -147,6 +149,9 @@ export async function signInWithRetry(
     if (isNetworkError(err)) {
       const proxy = await signInViaProxy(email, password);
       if (proxy && "customToken" in proxy) {
+        // #region agent log
+        if (typeof fetch !== 'undefined') fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'authHelpers.ts:signInWithRetry:proxy',message:'Using proxy, calling signInWithCustomToken',data:{},hypothesisId:'H4',timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         return signInWithCustomToken(auth, proxy.customToken);
       }
       if (proxy && "error" in proxy) {

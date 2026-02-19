@@ -42,10 +42,19 @@ export default function TopNav() {
   }, [menuOpen]);
 
   async function handleSignOut() {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TopNav.tsx:handleSignOut:start',message:'Sign out clicked',data:{},hypothesisId:'signout',timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     try {
       await signOut(auth);
-      router.push("/login");
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TopNav.tsx:handleSignOut:success',message:'signOut completed',data:{},hypothesisId:'signout',timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+      // Do NOT router.push("/login") - auth state hasn't propagated yet. ProtectedRoute will redirect when user becomes null.
     } catch (err) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TopNav.tsx:handleSignOut:error',message:'signOut threw',data:{msg:(err as Error).message},hypothesisId:'signout',timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       console.error("Sign out error", err);
     }
   }

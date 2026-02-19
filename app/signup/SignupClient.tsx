@@ -6,6 +6,7 @@ import { signUpWithRetry, getAuthErrorMessage } from "@/app/lib/authHelpers";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/providers/AuthProvider";
+import { useGoogleSignIn } from "@/app/hooks/useGoogleSignIn";
 import Input from "@/app/components/ui/Input";
 import Button from "@/app/components/ui/Button";
 
@@ -19,6 +20,12 @@ export default function SignupClient() {
   const searchParams = useSearchParams();
   const next = searchParams?.get("next") || "/dashboard";
   const { user, loading: authLoading } = useAuth();
+  const { handleGoogle, googleLoading } = useGoogleSignIn({
+    router,
+    next,
+    setError,
+    onClear: () => setValidation(null),
+  });
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -44,7 +51,7 @@ export default function SignupClient() {
     setLoading(true);
     try {
       await signUpWithRetry(auth, email.trim(), password);
-      router.push(next);
+      // Don't navigate here - let the useEffect redirect when auth state propagates.
     } catch (err: unknown) {
       const errorCode = (err as { code?: string })?.code;
       const fallback = (err as { message?: string })?.message || "Sign up failed. Please try again.";
@@ -108,6 +115,29 @@ export default function SignupClient() {
               {loading ? "Creating account..." : "Create Account"}
             </Button>
           </form>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-card text-foreground-muted">Or continue with</span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="secondary"
+            className="w-full"
+            onClick={handleGoogle}
+            disabled={googleLoading}
+          >
+            {googleLoading ? "Connecting..." : "Sign up with Google"}
+          </Button>
+
+          <p className="text-xs text-foreground-muted text-center">
+            If Google fails: add <code className="bg-surface px-1 rounded">{typeof window !== "undefined" ? window.location.origin : ""}</code> to Google Cloud → Credentials → OAuth Client → Authorized JavaScript origins
+          </p>
 
           <div className="text-center text-sm text-foreground-muted">
             Already have an account?{" "}

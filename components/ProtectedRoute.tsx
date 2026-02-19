@@ -11,10 +11,16 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
 
   // Redirect ONLY after we know auth state for sure
   React.useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProtectedRoute.tsx:useEffect',message:'ProtectedRoute auth check',data:{loading,hasUser:!!user,pathname},hypothesisId:'H4,H5',timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     if (loading) return;             // ❗ prevent premature redirect (KEY FIX)
     if (user) return;                // logged in → allow page to load
 
     const next = pathname || "/";
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProtectedRoute.tsx:useEffect:redirect',message:'Redirecting to login',data:{pathname,next},hypothesisId:'H4',timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     router.push(`/login?next=${encodeURIComponent(next)}`);
   }, [loading, user, router, pathname]);
 

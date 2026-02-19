@@ -53,12 +53,12 @@ Note the Function URL (e.g. `https://us-central1-your-project.cloudfunctions.net
 
 ## 6. Firebase Auth (Google Sign-In)
 
-1. **Firebase Console** → Authentication → Settings → Authorized domains: add your app domain (e.g. `app.yourdomain.com` or your Vercel URL)
-2. **Google Cloud Console** → APIs & Services → Credentials → OAuth 2.0 Client ID:
-   - Authorized JavaScript origins: `https://your-domain.com`
-   - Authorized redirect URIs: `https://your-project.firebaseapp.com/__/auth/handler`
+The app uses `signInWithPopup` (not redirect) because `signInWithRedirect` is broken in Chrome M115+ and modern browsers due to third-party cookie blocking.
 
-Using a custom domain in Vercel avoids rotating URLs and repeated domain config.
+1. **Firebase Console** → Authentication → Settings → Authorized domains: add your app domain (e.g. `cadence-indol.vercel.app`, `localhost`)
+2. **Google Cloud Console** → APIs & Services → Credentials → OAuth 2.0 Client ID (Web client):
+   - Authorized JavaScript origins: your app URL (e.g. `https://your-app.vercel.app`, `http://localhost:3000`)
+   - Authorized redirect URIs: `https://YOUR_PROJECT_ID.firebaseapp.com/__/auth/handler` (double underscore)
 
 ## 7. Deploy Frontend (Vercel)
 

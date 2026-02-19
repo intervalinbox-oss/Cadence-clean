@@ -83,6 +83,7 @@ function mapRestErrorToCode(msg: string): string {
   if (msg.includes("INVALID_EMAIL")) return "auth/invalid-email";
   if (msg.includes("USER_DISABLED")) return "auth/user-disabled";
   if (msg.includes("TOO_MANY_ATTEMPTS")) return "auth/too-many-requests";
+  if (msg.includes("CREDENTIAL_MISMATCH")) return "auth/account-exists-with-different-credential";
   return msg;
 }
 

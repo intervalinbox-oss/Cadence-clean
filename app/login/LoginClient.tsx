@@ -10,6 +10,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/providers/AuthProvider";
+import { useGoogleSignIn } from "@/app/hooks/useGoogleSignIn";
 import Input from "@/app/components/ui/Input";
 import Button from "@/app/components/ui/Button";
 
@@ -24,9 +25,24 @@ export default function LoginClient() {
   const searchParams = useSearchParams();
   const next = searchParams?.get("next") || "/";
   const { user, loading: authLoading } = useAuth();
+  const { handleGoogle, googleLoading } = useGoogleSignIn({
+    router,
+    next,
+    setError,
+    onClear: () => {
+      setValidation(null);
+      setResetEmailSent(false);
+    },
+  });
 
   useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginClient.tsx:useEffect',message:'Auth state check',data:{authLoading,hasUser:!!user,next},hypothesisId:'H2,H3',timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     if (!authLoading && user) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginClient.tsx:useEffect:redirect',message:'Redirecting after login',data:{next},hypothesisId:'H3',timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       router.push(next);
     }
   }, [authLoading, user, router, next]);
@@ -45,12 +61,21 @@ export default function LoginClient() {
     }
 
     setLoading(true);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginClient.tsx:handleLogin:start',message:'Login attempt started',data:{emailPrefix:email.slice(0,3)},hypothesisId:'H1',timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     try {
       await signInWithRetry(auth, email.trim(), password);
-      router.push(next);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginClient.tsx:handleLogin:success',message:'signInWithRetry completed successfully',data:{},hypothesisId:'H1',timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+      // Don't navigate here - let the useEffect redirect when auth state propagates.
     } catch (err: unknown) {
       const errorCode = (err as { code?: string })?.code;
       const fallback = (err as { message?: string })?.message || "Login failed. Please try again.";
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginClient.tsx:handleLogin:error',message:'signInWithRetry threw',data:{errorCode,msg:(err as Error).message},hypothesisId:'H1',timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       setError(getAuthErrorMessage(errorCode, fallback, "login"));
     } finally {
       setLoading(false);
@@ -148,6 +173,29 @@ export default function LoginClient() {
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-card text-foreground-muted">Or continue with</span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="secondary"
+            className="w-full"
+            onClick={handleGoogle}
+            disabled={googleLoading}
+          >
+            {googleLoading ? "Connecting..." : "Sign in with Google"}
+          </Button>
+
+          <p className="text-xs text-foreground-muted text-center">
+            If Google fails: add <code className="bg-surface px-1 rounded">{typeof window !== "undefined" ? window.location.origin : ""}</code> to Google Cloud → Credentials → OAuth Client → Authorized JavaScript origins
+          </p>
 
           <div className="text-center text-sm text-foreground-muted">
             Don't have an account?{" "}
