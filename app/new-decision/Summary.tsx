@@ -91,27 +91,6 @@ export default function Summary({ data, onBack }: SummaryProps) {
         },
       };
 
-      // #region agent log
-      fetch("http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: `log_${Date.now()}_frontend_timeline`,
-          timestamp: Date.now(),
-          location: "app/new-decision/Summary.tsx:handleSave",
-          message: "decisionData timeline vs time_sensitivity before saveDecision",
-          runId: "pre-fix",
-          hypothesisId: "H1",
-          data: {
-            timeline: (decisionData as any).timeline,
-            time_sensitivity: (decisionData as any).time_sensitivity,
-            hasInputs: !!(decisionData as any).inputs,
-            keys: Object.keys(decisionData),
-          },
-        }),
-      }).catch(() => {});
-      // #endregion
-
       const result = await saveDecision(decisionData, rulesResult.time_saved_minutes || 0);
       router.push(`/decision/${result.id}`);
     } catch (err) {

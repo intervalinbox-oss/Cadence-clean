@@ -36,13 +36,7 @@ export default function LoginClient() {
   });
 
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginClient.tsx:useEffect',message:'Auth state check',data:{authLoading,hasUser:!!user,next},hypothesisId:'H2,H3',timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     if (!authLoading && user) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginClient.tsx:useEffect:redirect',message:'Redirecting after login',data:{next},hypothesisId:'H3',timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       router.push(next);
     }
   }, [authLoading, user, router, next]);
@@ -61,21 +55,12 @@ export default function LoginClient() {
     }
 
     setLoading(true);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginClient.tsx:handleLogin:start',message:'Login attempt started',data:{emailPrefix:email.slice(0,3)},hypothesisId:'H1',timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     try {
       await signInWithRetry(auth, email.trim(), password);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginClient.tsx:handleLogin:success',message:'signInWithRetry completed successfully',data:{},hypothesisId:'H1',timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       // Don't navigate here - let the useEffect redirect when auth state propagates.
     } catch (err: unknown) {
       const errorCode = (err as { code?: string })?.code;
       const fallback = (err as { message?: string })?.message || "Login failed. Please try again.";
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginClient.tsx:handleLogin:error',message:'signInWithRetry threw',data:{errorCode,msg:(err as Error).message},hypothesisId:'H1',timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       setError(getAuthErrorMessage(errorCode, fallback, "login"));
     } finally {
       setLoading(false);

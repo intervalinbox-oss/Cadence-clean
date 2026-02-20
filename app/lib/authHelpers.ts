@@ -149,9 +149,6 @@ export async function signInWithRetry(
     if (isNetworkError(err)) {
       const proxy = await signInViaProxy(email, password);
       if (proxy && "customToken" in proxy) {
-        // #region agent log
-        if (typeof fetch !== 'undefined') fetch('http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'authHelpers.ts:signInWithRetry:proxy',message:'Using proxy, calling signInWithCustomToken',data:{},hypothesisId:'H4',timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         return signInWithCustomToken(auth, proxy.customToken);
       }
       if (proxy && "error" in proxy) {
