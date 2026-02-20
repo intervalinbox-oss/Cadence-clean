@@ -46,13 +46,13 @@ export function getAuthInstance(): import("firebase/auth").Auth {
 }
 
 /** Call from the client after fetching config (e.g. from /api/firebase-config) to init Firebase. */
-export function initializeFirebaseFromConfig(config: FirebaseConfig): void {
+export async function initializeFirebaseFromConfig(config: FirebaseConfig): Promise<void> {
   if (typeof window === "undefined") return;
   if (_auth != null && _db != null) return;
   if (!config.apiKey?.trim()) return;
-  const { initializeApp, getApps, getApp } = require("firebase/app");
-  const { getAuth } = require("firebase/auth");
-  const { getFirestore } = require("firebase/firestore");
+  const { initializeApp, getApps, getApp } = await import("firebase/app");
+  const { getAuth } = await import("firebase/auth");
+  const { getFirestore } = await import("firebase/firestore");
   const app = getApps().length > 0 ? getApp() : initializeApp(config);
   _auth = getAuth(app);
   _db = getFirestore(app);

@@ -36,13 +36,13 @@ export default function FirebaseConfigProvider({
       appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? "",
     };
 
-    if (buildTimeConfig.apiKey?.trim() && buildTimeConfig.projectId?.trim()) {
-      initializeFirebaseFromConfig(buildTimeConfig);
-      setReady(true);
-      return;
-    }
-
     (async () => {
+      if (buildTimeConfig.apiKey?.trim() && buildTimeConfig.projectId?.trim()) {
+        await initializeFirebaseFromConfig(buildTimeConfig);
+        if (!cancelled) setReady(true);
+        return;
+      }
+
       try {
         const res = await fetch("/firebase-config.json", { cache: "no-store" });
         if (cancelled) return;
@@ -55,12 +55,13 @@ export default function FirebaseConfigProvider({
           setError("Firebase config is incomplete.");
           return;
         }
-        initializeFirebaseFromConfig(config);
+        await initializeFirebaseFromConfig(config);
         if (!cancelled) setReady(true);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load Firebase config");
       }
     })();
+
     return () => {
       cancelled = true;
     };
