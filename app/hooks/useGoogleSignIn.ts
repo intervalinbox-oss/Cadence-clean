@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { auth } from "@/app/lib/firebase";
+import { getAuthInstance } from "@/app/lib/firebase";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 type UseGoogleSignInOptions = {
@@ -44,7 +44,7 @@ export function useGoogleSignIn({ router, next, setError, onClear }: UseGoogleSi
 
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(getAuthInstance(), provider);
       if (result?.user) {
         router.push(next);
       }

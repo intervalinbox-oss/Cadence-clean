@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, getRedirectResult } from "firebase/auth";
-import { auth } from "@/app/lib/firebase";
+import { getAuthInstance } from "@/app/lib/firebase";
 
 type AuthContextValue = {
   user: any | null;
@@ -16,8 +16,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const authInstance = getAuthInstance();
+
     // Process Google OAuth redirect result (when returning from signInWithRedirect)
-    getRedirectResult(auth)
+    getRedirectResult(authInstance)
       .then((result) => {
         if (result?.user) {
         }
@@ -25,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .catch((err) => {
       });
 
-    const unsub = onAuthStateChanged(auth, (u) => {
+    const unsub = onAuthStateChanged(authInstance, (u) => {
       setUser(u);
       setLoading(false);
     });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { auth } from "@/app/lib/firebase";
+import { getAuthInstance } from "@/app/lib/firebase";
 import { db } from "@/app/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
@@ -23,7 +23,7 @@ export default function HistoryPage() {
 
   useEffect(() => {
     let unsubSnapshot: (() => void) | null = null;
-    const unsubAuth = onAuthStateChanged(auth, (user) => {
+    const unsubAuth = onAuthStateChanged(getAuthInstance(), (user) => {
       if (!user) {
         setDecisions([]);
         setLoading(false);

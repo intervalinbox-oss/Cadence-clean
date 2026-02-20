@@ -39,15 +39,21 @@ const dbProxy = new Proxy({} as import("firebase/firestore").Firestore, {
 export const auth = authProxy;
 export const db = dbProxy;
 
+/** Returns the real Auth instance (not the proxy). Use this when passing auth to Firebase SDK functions like signInWithPopup, signInWithEmailAndPassword, etc. */
+export function getAuthInstance(): import("firebase/auth").Auth {
+  if (_auth == null) throw new Error(stubMessage);
+  return _auth;
+}
+
 /** Call from the client after fetching config (e.g. from /api/firebase-config) to init Firebase. */
 export function initializeFirebaseFromConfig(config: FirebaseConfig): void {
   if (typeof window === "undefined") return;
   if (_auth != null && _db != null) return;
   if (!config.apiKey?.trim()) return;
-  const { initializeApp } = require("firebase/app");
+  const { initializeApp, getApps, getApp } = require("firebase/app");
   const { getAuth } = require("firebase/auth");
   const { getFirestore } = require("firebase/firestore");
-  const app = initializeApp(config);
+  const app = getApps().length > 0 ? getApp() : initializeApp(config);
   _auth = getAuth(app);
   _db = getFirestore(app);
 }

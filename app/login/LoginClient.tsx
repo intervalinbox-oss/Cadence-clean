@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { auth } from "@/app/lib/firebase";
+import { getAuthInstance } from "@/app/lib/firebase";
 import {
   signInWithRetry,
   sendPasswordResetWithRetry,
@@ -56,7 +56,7 @@ export default function LoginClient() {
 
     setLoading(true);
     try {
-      await signInWithRetry(auth, email.trim(), password);
+      await signInWithRetry(getAuthInstance(), email.trim(), password);
       // Don't navigate here - let the useEffect redirect when auth state propagates.
     } catch (err: unknown) {
       const errorCode = (err as { code?: string })?.code;
@@ -78,7 +78,7 @@ export default function LoginClient() {
     }
 
     try {
-      await sendPasswordResetWithRetry(auth, email.trim());
+      await sendPasswordResetWithRetry(getAuthInstance(), email.trim());
       setResetEmailSent(true);
       setError(null);
     } catch (err: unknown) {

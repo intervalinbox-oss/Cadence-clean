@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { auth } from "@/app/lib/firebase";
+import { getAuthInstance } from "@/app/lib/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
@@ -43,7 +43,7 @@ export default function TopNav() {
 
   async function handleSignOut() {
     try {
-      await signOut(auth);
+      await signOut(getAuthInstance());
     } catch (err) {
       console.error("Sign out error", err);
     } finally {
