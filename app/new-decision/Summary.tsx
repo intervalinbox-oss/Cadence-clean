@@ -31,6 +31,7 @@ export default function Summary({ data, onBack }: SummaryProps) {
     content: string;
   }>({ type: null, content: "" });
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [generateError, setGenerateError] = useState<string | null>(null);
 
   const rulesResult = useMemo(() => {
     try {
@@ -60,7 +61,8 @@ export default function Summary({ data, onBack }: SummaryProps) {
       });
     } catch (error) {
       console.error("Failed to generate content:", error);
-      // Continue without generated content
+      const msg = error instanceof Error ? error.message : "Unknown error";
+      setGenerateError(`Content generation failed: ${msg}. You can still save your results.`);
     } finally {
       setGenerating(false);
     }
@@ -264,6 +266,11 @@ export default function Summary({ data, onBack }: SummaryProps) {
       )}
 
       {/* Generated Content */}
+      {generateError && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          {generateError}
+        </div>
+      )}
       {generating ? (
         <Card size="large" className="overflow-hidden">
           <div className="animate-pulse space-y-4 py-6 px-4">

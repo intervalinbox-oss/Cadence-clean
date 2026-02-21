@@ -178,10 +178,6 @@ export default function LoginClient() {
             {googleLoading ? "Connecting..." : "Sign in with Google"}
           </Button>
 
-          <p className="text-xs text-foreground-muted text-center">
-            If Google fails: add <code className="bg-surface px-1 rounded">{typeof window !== "undefined" ? window.location.origin : ""}</code> to Google Cloud → Credentials → OAuth Client → Authorized JavaScript origins
-          </p>
-
           <div className="text-center text-sm text-foreground-muted">
             Don't have an account?{" "}
             <Link

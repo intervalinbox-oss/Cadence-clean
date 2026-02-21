@@ -74,7 +74,19 @@ export default function TopNav() {
             </Link>
           </div>
 
-          <div className="flex-1 md:hidden" aria-hidden="true" />
+          {/* Mobile: "New cadence" always visible next to hamburger */}
+          <div className="flex md:hidden flex-1 justify-end mr-2">
+            <Link
+              href="/new-decision"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium gradient-accent text-white hover:opacity-90 transition-opacity"
+              aria-label="Start a new cadence"
+            >
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              New cadence
+            </Link>
+          </div>
 
           <div className="hidden md:flex flex-wrap items-center gap-1 flex-1">
             {NAV_ITEMS.map((item) => (

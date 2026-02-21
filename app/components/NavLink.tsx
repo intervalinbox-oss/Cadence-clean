@@ -17,8 +17,8 @@ export default function NavLink({ href, label, icon, isActive, primary, mobile, 
   const baseClass = "flex items-center rounded-md text-sm font-medium transition-colors";
   const desktopClass = mobile ? "gap-3 px-3 py-3 min-h-[44px]" : "gap-1.5 px-3 py-2";
   const iconSize = mobile ? "w-5 h-5 shrink-0" : "w-4 h-4";
-  const activeClass = primary && isActive
-    ? "bg-accent-blue text-white"
+  const activeClass = primary
+    ? "gradient-accent text-white hover:opacity-90"
     : isActive
       ? "bg-accent-blue/10 text-accent-blue"
       : "text-foreground-muted hover:text-foreground hover:bg-surface";
