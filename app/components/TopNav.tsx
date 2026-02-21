@@ -46,7 +46,6 @@ export default function TopNav() {
     } catch (err) {
       console.error("Sign out error", err);
     } finally {
-      // Clear any cached Firebase auth state and force redirect to login
       try {
         indexedDB.deleteDatabase("firebaseLocalStorageDb");
       } catch {}
@@ -59,35 +58,22 @@ export default function TopNav() {
   return (
     <nav className="w-full border-b border-border bg-surface" role="navigation" aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="flex items-center gap-2 font-semibold text-lg text-foreground hover:opacity-80 transition-opacity"
-              aria-label="Cadence home"
-            >
-              <svg className="w-6 h-6 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              <span>Cadence</span>
-            </Link>
-          </div>
+        <div className="flex items-center h-16 gap-3">
 
-          {/* Mobile: "New cadence" always visible next to hamburger */}
-          <div className="flex md:hidden flex-1 justify-end mr-2">
-            <Link
-              href="/new-decision"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium gradient-accent text-white hover:opacity-90 transition-opacity"
-              aria-label="Start a new cadence"
-            >
-              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              New cadence
-            </Link>
-          </div>
+          {/* Logo — always left */}
+          <Link
+            href="/"
+            className="flex items-center gap-2 font-semibold text-lg text-foreground hover:opacity-80 transition-opacity shrink-0"
+            aria-label="Cadence home"
+          >
+            <svg className="w-6 h-6 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>Cadence</span>
+          </Link>
 
-          <div className="hidden md:flex flex-wrap items-center gap-1 flex-1">
+          {/* Desktop nav — takes remaining space */}
+          <div className="hidden md:flex items-center gap-1 flex-1">
             {NAV_ITEMS.map((item) => (
               <NavLink
                 key={item.href}
@@ -100,41 +86,55 @@ export default function TopNav() {
             ))}
           </div>
 
-          {/* User Menu (desktop: always; mobile: only when not logged in, so Sign In shows) */}
-          <div className={`flex items-center gap-3 ${user ? "hidden md:flex" : ""}`}>
-            {loading ? (
-              <span className="text-sm text-foreground-muted">Loading...</span>
-            ) : user ? (
-              <>
-                <span className="text-sm text-foreground-muted hidden sm:inline" aria-label={`Signed in as ${user.email}`}>
-                  {user.email}
-                </span>
-                <button
-                  onClick={handleSignOut}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm text-foreground-muted hover:text-foreground transition-colors"
-                  aria-label="Sign out"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  <span className="hidden sm:inline">Logout</span>
-                </button>
-              </>
-            ) : (
-              <Link href="/login">
-                <Button size="small" variant="secondary">
-                  Sign In
-                </Button>
-              </Link>
-            )}
-          </div>
+          {/* Right section: all right-aligned items in one flex group */}
+          <div className="flex items-center gap-2 ml-auto">
 
-          {/* Hamburger (mobile only, rightmost) */}
-          <div className="flex items-center md:hidden">
+            {/* Mobile only: "New cadence" gradient button */}
+            <Link
+              href="/new-decision"
+              className="flex md:hidden items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium gradient-accent text-white hover:opacity-90 transition-opacity"
+              aria-label="Start a new cadence"
+            >
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span>New cadence</span>
+            </Link>
+
+            {/* User menu — desktop: always; mobile: only when logged out */}
+            <div className={user ? "hidden md:flex items-center gap-2" : "flex items-center gap-2"}>
+              {loading ? (
+                <span className="text-sm text-foreground-muted">Loading...</span>
+              ) : user ? (
+                <>
+                  <span className="text-sm text-foreground-muted hidden sm:inline" aria-label={`Signed in as ${user.email}`}>
+                    {user.email}
+                  </span>
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center gap-1.5 px-3 py-2 text-sm text-foreground-muted hover:text-foreground transition-colors"
+                    aria-label="Sign out"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span className="hidden sm:inline">Logout</span>
+                  </button>
+                </>
+              ) : (
+                <Link href="/login">
+                  <Button size="small" variant="secondary">
+                    Sign In
+                  </Button>
+                </Link>
+              )}
+            </div>
+
+            {/* Hamburger — mobile only, rightmost */}
             <button
               type="button"
               onClick={() => setMenuOpen((open) => !open)}
-              className="p-2 rounded-md text-foreground-muted hover:text-foreground hover:bg-surface transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="flex md:hidden p-2 rounded-md text-foreground-muted hover:text-foreground hover:bg-surface transition-colors min-h-[44px] min-w-[44px] items-center justify-center"
               aria-expanded={menuOpen}
               aria-controls="mobile-nav-menu"
               aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -152,6 +152,7 @@ export default function TopNav() {
           </div>
         </div>
 
+        {/* Mobile dropdown menu */}
         {menuOpen && (
           <div
             id="mobile-nav-menu"

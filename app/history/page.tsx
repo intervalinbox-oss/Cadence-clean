@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAuthInstance } from "@/app/lib/firebase";
-import { db } from "@/app/lib/firebase";
+import { getAuthInstance, getDbInstance } from "@/app/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -31,7 +30,7 @@ export default function HistoryPage() {
       }
 
       const q = query(
-        collection(db, "decisions"),
+        collection(getDbInstance(), "decisions"),
         where("uid", "==", user.uid),
         orderBy("timestamp", "desc")
       );

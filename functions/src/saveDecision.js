@@ -14,27 +14,6 @@ async function saveDecision(req, res) {
       return res.status(400).json({ error: "Missing decisionData" });
     }
 
-    // #region agent log
-    fetch("http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: `log_${Date.now()}_backend_decisionData`,
-        timestamp: Date.now(),
-        location: "functions/src/saveDecision.js:beforeInputs",
-        message: "Raw decisionData received by saveDecision",
-        runId: "pre-fix",
-        hypothesisId: "H1",
-        data: {
-          hasInputs: !!(decisionData && (decisionData.inputs || decisionData.input)),
-          timeline: decisionData.timeline,
-          time_sensitivity: decisionData.time_sensitivity,
-          keys: Object.keys(decisionData || {}),
-        },
-      }),
-    }).catch(() => {});
-    // #endregion
-
     // Build inputs: prefer explicit inputs/input, else from top-level wizard fields (Quick Mode / Full Wizard)
     const explicitInputs = decisionData.inputs || decisionData.input;
     const rawInputs = explicitInputs && Object.keys(explicitInputs).length > 0
@@ -59,27 +38,6 @@ async function saveDecision(req, res) {
       if (value !== undefined) acc[key] = value;
       return acc;
     }, {});
-
-    // #region agent log
-    fetch("http://127.0.0.1:7242/ingest/c3ffbf4b-2e94-4f0e-98bd-ef087cba20e6", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: `log_${Date.now()}_backend_inputs`,
-        timestamp: Date.now(),
-        location: "functions/src/saveDecision.js:afterInputs",
-        message: "Derived inputs before Firestore write",
-        runId: "pre-fix",
-        hypothesisId: "H1",
-        data: {
-          usingExplicitInputs: !!(explicitInputs && Object.keys(explicitInputs).length > 0),
-          inputsTimeline: inputs.timeline,
-          inputsTimeSensitivity: inputs.time_sensitivity,
-          inputKeys: Object.keys(inputs || {}),
-        },
-      }),
-    }).catch(() => {});
-    // #endregion
 
     // Prepare document matching spec schema
     const docData = {

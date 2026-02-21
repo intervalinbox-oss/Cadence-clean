@@ -11,7 +11,7 @@ let client = null;
 
 function getClaudeClient() {
   if (!client) {
-    const apiKey = process.env.CLAUDE_API_KEY;
+    const apiKey = (process.env.CLAUDE_API_KEY || "").trim();
     if (!apiKey) {
       throw new Error("CLAUDE_API_KEY secret not configured");
     }
@@ -68,7 +68,7 @@ async function generateCadence(req, res) {
     }
 
     // Call Claude API (model override via CLAUDE_MODEL env; keep max_tokens modest for latency)
-    const modelId = process.env.CLAUDE_MODEL || "claude-sonnet-4-20250514";
+    const modelId = process.env.CLAUDE_MODEL || "claude-3-5-sonnet-20241022";
     const claudeClient = getClaudeClient();
     const startMs = Date.now();
     const result = await claudeClient.messages.create({

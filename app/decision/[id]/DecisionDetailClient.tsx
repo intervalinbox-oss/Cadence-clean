@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/app/lib/firebase";
+import { getDbInstance } from "@/app/lib/firebase";
 import Card from "@/app/components/ui/Card";
 import Badge from "@/app/components/ui/Badge";
 import Button from "@/app/components/ui/Button";
@@ -26,7 +26,7 @@ export default function DecisionDetailClient({ id }: { id?: string }) {
     }
 
     setLoading(true);
-    getDoc(doc(db, "decisions", id))
+    getDoc(doc(getDbInstance(), "decisions", id))
       .then((snap) => {
         if (!snap.exists()) {
           setError("Decision not found");

@@ -45,6 +45,12 @@ export function getAuthInstance(): import("firebase/auth").Auth {
   return _auth;
 }
 
+/** Returns the real Firestore instance (not the proxy). Use this when passing db to Firestore SDK functions like getDoc, collection, etc. */
+export function getDbInstance(): import("firebase/firestore").Firestore {
+  if (_db == null) throw new Error(stubMessage);
+  return _db;
+}
+
 /** Call from the client after fetching config (e.g. from /api/firebase-config) to init Firebase. */
 export async function initializeFirebaseFromConfig(config: FirebaseConfig): Promise<void> {
   if (typeof window === "undefined") return;
